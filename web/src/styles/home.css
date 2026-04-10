@@ -248,13 +248,16 @@
 }
 
 .section-heading h2 {
-  font-size: clamp(24px, 6vw, 38px);
+  margin: 0;
+  font-size: clamp(30px, 6.8vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.055em;
 }
 
 .stacked-cards {
   position: relative;
   min-height: 350px;
-  padding-top: 10px;
+  padding-top: 18px;
 }
 
 .status-card {
@@ -264,7 +267,7 @@
   gap: 18px;
   padding: 24px 22px 26px;
   border-radius: 30px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .status-card-main {
@@ -289,7 +292,7 @@
 }
 
 .status-card-text {
-  max-width: 24rem;
+  max-width: min(24rem, calc(100% - 132px));
   font-size: clamp(20px, 4.6vw, 27px);
   line-height: 1.55;
   letter-spacing: -0.03em;
@@ -317,6 +320,76 @@
 .status-card-layer .status-card-text,
 .status-card-layer .status-card-location {
   opacity: 0.54;
+}
+
+.status-card-photo-stack {
+  position: absolute;
+  top: -28px;
+  right: clamp(-6px, -1vw, 0px);
+  width: clamp(136px, 32vw, 184px);
+  height: clamp(108px, 24vw, 142px);
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.status-card-photo-stack.is-visible {
+  opacity: 1;
+}
+
+.status-card-photo-stack.is-hidden {
+  opacity: 0;
+}
+
+.status-card-photo-card {
+  position: absolute;
+  right: 18px;
+  bottom: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #ebe7e1;
+  transform-origin: right bottom;
+  box-shadow:
+    0 10px 22px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.status-card-photo-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-card-1 {
+  z-index: 3;
+  width: clamp(78px, 19vw, 106px);
+  height: clamp(96px, 23vw, 128px);
+  transform: translate(0, 0) rotate(0deg);
+}
+
+.photo-card-2 {
+  z-index: 2;
+  width: clamp(76px, 18.6vw, 104px);
+  height: clamp(94px, 22.4vw, 126px);
+  transform: translate(-4px, -2px) rotate(15deg);
+}
+
+.photo-card-3 {
+  z-index: 1;
+  width: clamp(74px, 18.2vw, 102px);
+  height: clamp(92px, 22vw, 124px);
+  transform: translate(-8px, -4px) rotate(30deg);
+}
+
+@media (max-width: 520px) {
+  .status-card-photo-stack {
+    top: -60px;
+    right: 4px;
+  }
+
+  .status-card-text {
+    max-width: calc(100% - 112px);
+  }
 }
 
 .status-card-layer .status-card-text {
