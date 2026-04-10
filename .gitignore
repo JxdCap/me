@@ -5,3 +5,4 @@ dist/
 .env.local
 pocketbase/pb_data/*
 !pocketbase/pb_data/.gitkeep
+*.tsbuildinfo
