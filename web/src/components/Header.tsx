@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Menu,
   X,
@@ -15,38 +15,20 @@ const menuItems = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [time, setTime] = useState(new Date())
-  const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  // MAGNETIC EFFECT LOGIC
-  const handlePointerMove = (e: PointerEvent) => {
-    if (!buttonRef.current || isMenuOpen) return
-    
-    const rect = buttonRef.current.getBoundingClientRect()
-    const x = e.clientX - (rect.left + rect.width / 2)
-    const y = e.clientY - (rect.top + rect.height / 2)
-    
-    // Limits the pull distance
-    const distance = Math.sqrt(x * x + y * y)
-    if (distance < 100) {
-      buttonRef.current.style.setProperty('--magnet-x', `${x * 0.35}px`)
-      buttonRef.current.style.setProperty('--magnet-y', `${y * 0.35}px`)
-    } else {
-      buttonRef.current.style.setProperty('--magnet-x', '0px')
-      buttonRef.current.style.setProperty('--magnet-y', '0px')
+  // Close menu on ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMenuOpen(false)
     }
-  }
-
-  const handlePointerLeave = () => {
-    if (buttonRef.current) {
-      buttonRef.current.style.setProperty('--magnet-x', '0px')
-      buttonRef.current.style.setProperty('--magnet-y', '0px')
-    }
-  }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <>
@@ -57,18 +39,13 @@ export function Header() {
         </div>
         
         <button
-          ref={buttonRef}
-          className={`index-trigger ${isMenuOpen ? 'is-active' : ''}`}
+          className={`simple-menu-trigger ${isMenuOpen ? 'is-active' : ''}`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          onPointerMove={handlePointerMove}
-          onPointerLeave={handlePointerLeave}
-          aria-label={isMenuOpen ? "关闭索引" : "打开索引"}
+          aria-label={isMenuOpen ? "关闭" : "菜单"}
         >
-          <div className="trigger-pill">
-            <span className="trigger-label">{isMenuOpen ? 'CLOSE' : 'INDEX'}</span>
-            <div className="trigger-icon">
-              {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </div>
+          <span className="trigger-text">{isMenuOpen ? '关闭' : '菜单'}</span>
+          <div className="trigger-icon-wrap">
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </div>
         </button>
       </header>
@@ -82,24 +59,25 @@ export function Header() {
                 href={item.path} 
                 className="index-link"
                 style={{ '--index': index } as React.CSSProperties}
+                onClick={() => setIsMenuOpen(false)}
               >
                 <span className="link-number">0{index + 1}</span>
                 <span className="link-label">{item.label}</span>
-                <ArrowUpRight className="link-arrow" size={24} strokeWidth={1.5} />
+                <ArrowUpRight className="link-arrow" size={28} strokeWidth={1.2} />
               </a>
             ))}
           </nav>
           
           <div className="index-footer">
             <div className="footer-item">
-              <span className="footer-label">LOCAL TIME</span>
+              <span className="footer-label">当前时间 / LOCAL TIME</span>
               <span className="footer-value">
                 {time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
             <div className="footer-item">
-              <span className="footer-label">STATUS</span>
-              <span className="footer-value">COLLECTIVE MEMORY</span>
+              <span className="footer-label">系统状态 / STATUS</span>
+              <span className="footer-value">正常运行 / COLLECTIVE MEMORY</span>
             </div>
           </div>
         </div>
