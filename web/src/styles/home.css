@@ -45,7 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 64px;
   z-index: 150;
   flex-shrink: 0;
 }
@@ -69,8 +69,8 @@
 .theme-toggle {
   all: unset;
   cursor: pointer;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -114,8 +114,8 @@
 }
 
 .trigger-icon-wrap {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -427,8 +427,6 @@
   border-radius: 32px;
   padding: 24px 28px;
   box-shadow: var(--card-shadow);
-  transform: translateY(calc(var(--card-index) * 14px)) scale(calc(1 - var(--card-index) * 0.04));
-  opacity: calc(1 - var(--card-index) * 0.15);
   z-index: calc(10 - var(--card-index));
   overflow: hidden;
 }
@@ -595,10 +593,8 @@
   backdrop-filter: blur(50px);
   -webkit-backdrop-filter: blur(50px);
   z-index: 200;
-  /* Opacity/Visibility managed by framer-motion */
   display: flex;
   flex-direction: column;
-  /* INTERACTIVE DOT MATRIX IN READER */
   background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
   background-size: 32px 32px;
   background-position: calc(var(--mouse-x, 0) * -10px) calc(var(--mouse-y, 0) * -10px);
@@ -659,10 +655,12 @@
 }
 
 .zine-image-item {
+  position: relative;
   overflow: hidden;
   border-radius: 12px;
   background: var(--border-color);
   cursor: zoom-in;
+  aspect-ratio: 4/3; /* Fixed aspect ratio for skeleton */
 }
 
 .zine-image-item img {
@@ -672,18 +670,27 @@
   display: block;
 }
 
-.images-1 { grid-template-columns: 1fr; aspect-ratio: 16/9; }
-.images-2 { grid-template-columns: 1fr 1fr; aspect-ratio: 16/9; }
-.images-3 { 
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 1fr;
+/* SKELETON LOADER ANIMATION */
+.skeleton-loader {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  background-color: var(--border-color);
 }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.images-1 { grid-template-columns: 1fr; }
+.images-2 { grid-template-columns: 1fr 1fr; }
+.images-3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
 .images-3 .zine-image-item:first-child { grid-row: span 2; }
-.images-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; aspect-ratio: 1/1; }
-.images-9 {
-  grid-template-columns: repeat(3, 1fr);
-  aspect-ratio: 1/1;
-}
+.images-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.images-9 { grid-template-columns: repeat(3, 1fr); }
 
 .photo-count-badge {
   position: absolute;
@@ -754,12 +761,12 @@
 }
 
 /* ==========================================================================
-   LIGHTBOX (WECHAT STYLE)
+   LIGHTBOX (WECHAT STYLE WITH GALLERY)
    ========================================================================== */
 .lightbox-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(0, 0, 0, 0.98);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -776,14 +783,43 @@
   align-items: center;
   justify-content: center;
   touch-action: none;
+  cursor: grab;
 }
+
+.lightbox-content:active { cursor: grabbing; }
 
 .lightbox-content img {
   max-width: 95vw;
-  max-height: 80vh;
+  max-height: 75vh;
   object-fit: contain;
   box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-  border-radius: 8px;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.lightbox-controls {
+  position: absolute;
+  bottom: 80px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  color: #fff;
+  z-index: 1010;
+}
+
+.lightbox-controls button {
+  all: unset;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.lightbox-controls button:hover { opacity: 1; }
+
+.idx-indicator {
+  font-family: monospace;
+  font-size: 14px;
+  letter-spacing: 0.1em;
 }
 
 .lightbox-hint {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ArrowRight } from 'lucide-react'
+import { X, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { type StillAliveCard } from './StillAlive'
 
 interface ZineReaderProps {
@@ -10,8 +10,26 @@ interface ZineReaderProps {
   memos: StillAliveCard[]
 }
 
+function ZineImage({ src }: { src: string }) {
+  const [isLoaded, setIsLoaded] = useState(false)
+  return (
+    <div className={`zine-image-item ${isLoaded ? 'is-loaded' : ''}`}>
+      <div className="skeleton-loader" />
+      <motion.img
+        src={src}
+        alt=""
+        loading="lazy"
+        onLoad={() => setIsLoaded(true)}
+        initial={{ filter: 'blur(20px)', opacity: 0 }}
+        animate={isLoaded ? { filter: 'blur(0px)', opacity: 1 } : {}}
+        transition={{ duration: 0.8 }}
+      />
+    </div>
+  )
+}
+
 export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderProps) {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -23,7 +41,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
-      setScrollProgress(0) // Reset progress on open
+      setScrollProgress(0)
     } else {
       document.body.style.overflow = ''
     }
@@ -44,18 +62,13 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
           exit={{ opacity: 0, y: 100, scale: 0.95 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
-          {/* SCROLL PROGRESS BAR */}
-          <motion.div 
-            className="scroll-progress-bar" 
-            style={{ scaleX: scrollProgress }} 
-          />
+          <motion.div className="scroll-progress-bar" style={{ scaleX: scrollProgress }} />
 
-          {/* UNIFIED CLOSE BUTTON */}
           <div className="zine-header">
             <button className="simple-menu-trigger is-active" onClick={onClose}>
               <span className="trigger-text">关闭</span>
               <div className="trigger-icon-wrap">
-                <X size={20} />
+                <X size={22} />
               </div>
             </button>
           </div>
@@ -70,15 +83,10 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 
                 {memo.images.length > 0 && (
                   <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
-                    {memo.images.slice(0, 9).map((img, i) => (
-                      <motion.div 
-                        key={i} 
-                        className="zine-image-item"
-                        whileHover={{ scale: 0.98 }}
-                        onClick={() => setSelectedImage(img)}
-                      >
-                        <img src={img} alt="" loading="lazy" />
-                      </motion.div>
+                    {memo.images.map((img, i) => (
+                      <div key={i} onClick={() => setLightboxData({ images: memo.images, index: i })}>
+                        <ZineImage src={img} />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -96,19 +104,18 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 )}
               </article>
             ))}
-            
             <div className="zine-end-cap">
               <p>END OF LOGS</p>
               <button className="back-to-top" onClick={onClose}>回到首页</button>
             </div>
           </div>
 
-          {/* LIGHTBOX OVERLAY */}
           <AnimatePresence>
-            {selectedImage && (
+            {lightboxData && (
               <Lightbox 
-                src={selectedImage} 
-                onClose={() => setSelectedImage(null)} 
+                images={lightboxData.images}
+                initialIndex={lightboxData.index}
+                onClose={() => setLightboxData(null)} 
               />
             )}
           </AnimatePresence>
@@ -118,7 +125,9 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   )
 }
 
-function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
+function Lightbox({ images, initialIndex, onClose }: { images: string[], initialIndex: number, onClose: () => void }) {
+  const [index, setIndex] = useState(initialIndex)
+
   return (
     <motion.div 
       className="lightbox-overlay"
@@ -128,21 +137,37 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
       onClick={onClose}
     >
       <motion.div 
+        key={index}
         className="lightbox-content"
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.8 }}
-        drag="y"
-        dragConstraints={{ top: 0, bottom: 0 }}
+        initial={{ x: 300, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: -300, opacity: 0 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
         onDragEnd={(_, info) => {
-          if (Math.abs(info.offset.y) > 100) {
-            onClose()
+          if (info.offset.x < -100 && index < images.length - 1) {
+            setIndex(index + 1)
+          } else if (info.offset.x > 100 && index > 0) {
+            setIndex(index - 1)
           }
         }}
       >
-        <img src={src} alt="" onClick={(e) => e.stopPropagation()} />
-        <div className="lightbox-hint">向下滑动关闭</div>
+        <img src={images[index]} alt="" onClick={(e) => e.stopPropagation()} draggable={false} />
+        
+        <div className="lightbox-controls" onClick={e => e.stopPropagation()}>
+          {index > 0 && <button onClick={() => setIndex(index - 1)}><ChevronLeft /></button>}
+          <span className="idx-indicator">{index + 1} / {images.length}</span>
+          {index < images.length - 1 && <button onClick={() => setIndex(index + 1)}><ChevronRight /></button>}
+        </div>
+        <div className="lightbox-hint">左右滑动切换 · 下拉关闭</div>
       </motion.div>
+
+      {/* Background click to close - specifically for the overlay */}
+      <div className="lightbox-swipe-close-zone" 
+           style={{ position: 'absolute', inset: 0, zIndex: -1 }} 
+           onClick={onClose} 
+      />
     </motion.div>
   )
 }

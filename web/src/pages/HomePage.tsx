@@ -8,7 +8,11 @@ import '../styles/animations.css'
 
 export function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    // Initial check from localStorage
+    const saved = localStorage.getItem('me-theme')
+    return (saved as 'light' | 'dark') || 'light'
+  })
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
 
@@ -27,9 +31,10 @@ export function HomePage() {
     return () => window.removeEventListener('pointermove', handlePointerMove)
   }, [handlePointerMove])
 
-  // THEME SYNC
+  // THEME SYNC & PERSISTENCE
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('me-theme', theme)
   }, [theme])
 
   const toggleTheme = () => {
