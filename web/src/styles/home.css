@@ -265,22 +265,32 @@
 .skill-content-container {
   display: grid;
   grid-template-rows: 0fr;
-  transition: all 0.4s ease;
-  opacity: 0;
-  overflow: hidden;
+  transition: grid-template-rows 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .skill-content-container.expanded {
   grid-template-rows: 1fr;
+}
+
+.skill-content-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.skill-content-container.expanded .skill-content-inner {
   opacity: 1;
 }
 
 .skill-content-inner p {
-  padding: 20px;
+  padding: 18px 20px;
   background: #f9f9fb;
+  border: 1px solid rgba(0, 0, 0, 0.03);
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.6;
+  margin: 12px 0 0; /* Add top spacing inside the animated grid row */
 }
 
 /* ==========================================================================
