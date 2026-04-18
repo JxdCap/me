@@ -12,8 +12,12 @@ const menuItems = [
   { label: '随笔', path: '/notes' },
 ]
 
-export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+interface HeaderProps {
+  isMenuOpen: boolean
+  setIsMenuOpen: (open: boolean) => void
+}
+
+export function Header({ isMenuOpen, setIsMenuOpen }: HeaderProps) {
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -28,7 +32,7 @@ export function Header() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [setIsMenuOpen])
 
   return (
     <>

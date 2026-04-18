@@ -19,7 +19,7 @@ export function Hero() {
       </div>
 
       <div className="hero-skills">
-        <div className="skill-tags">
+        <div className={`skill-tags ${activeSkill ? 'has-active' : ''}`}>
           {SKILLS.map((skill) => (
             <button
               key={skill.id}
