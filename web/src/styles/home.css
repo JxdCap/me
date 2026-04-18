@@ -1,7 +1,11 @@
 .page-shell {
-  width: min(100%, 1120px);
+  width: min(100%, 1280px);
   margin: 0 auto;
-  padding: 20px 16px 72px;
+  padding: 16px 20px 24px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .topbar {
@@ -9,6 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .topbar-actions {
@@ -158,329 +163,373 @@
   letter-spacing: 0.01em;
 }
 
+/* ==========================================================================
+   HERO / MIDDLE SECTION
+   ========================================================================== */
 .hero {
-  display: grid;
-  gap: 28px;
-  padding: 56px 0 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+  padding: 8vh 0 4vh;
+  flex-shrink: 0;
+}
+
+.hero-compact-header {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hero-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(240,240,238,0.94));
+  border: 1px solid rgba(230,230,230,0.96);
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.92), 
+    0 16px 32px rgba(15,23,42,0.06),
+    0 4px 12px rgba(15,23,42,0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-avatar-placeholder::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), transparent 60%);
 }
 
 .hero-copy {
-  display: grid;
-  gap: 16px;
-}
-
-.hero-kicker,
-.section-kicker {
-  font-size: 14px;
-  color: #6b7280;
-  letter-spacing: 0.08em;
-}
-
-.hero h1,
-.status-section h2 {
-  font-size: clamp(30px, 8vw, 56px);
-  line-height: 1.12;
-  letter-spacing: -0.04em;
-  color: #111111;
-}
-
-.hero-description {
   max-width: 32rem;
-  font-size: 15px;
-  color: #4b5563;
 }
 
-.keyword-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 6px;
-}
-
-.keyword-list li {
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #f5f5f5;
-  color: #2f2f2f;
-  font-size: 14px;
-}
-
-.avatar-block {
-  display: flex;
-  justify-content: center;
-  padding-top: 8px;
-}
-
-.avatar-ring {
-  display: grid;
-  place-items: center;
-  width: min(72vw, 320px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(239, 239, 239, 0.92));
-  box-shadow:
-    0 28px 60px rgba(17, 24, 39, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.avatar-core {
-  display: grid;
-  place-items: center;
-  width: 72%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #f8f8f8, #ececec);
-  color: #707070;
-  font-size: 15px;
-  letter-spacing: 0.12em;
-}
-
-.status-section {
-  display: grid;
-  gap: 20px;
-  padding-top: 12px;
-}
-
-.section-heading {
-  display: grid;
-  gap: 10px;
-}
-
-.section-heading h2 {
-  margin: 0;
-  font-size: clamp(30px, 6.8vw, 44px);
-  line-height: 1.05;
-  letter-spacing: -0.055em;
-}
-
-.stacked-cards {
-  position: relative;
-  min-height: 350px;
-  padding-top: 18px;
-}
-
-.status-card {
-  position: absolute;
-  inset: 0 0 auto;
-  display: grid;
-  gap: 18px;
-  padding: 24px 22px 26px;
-  border-radius: 30px;
-  overflow: visible;
-}
-
-.status-card-main {
-  z-index: 3;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(236, 236, 236, 0.96);
-  box-shadow:
-    0 24px 48px rgba(15, 23, 42, 0.08),
-    0 6px 18px rgba(15, 23, 42, 0.04);
-}
-
-.status-card-time,
-.status-card-text,
-.status-card-location {
-  margin: 0;
-}
-
-.status-card-time {
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: #8a94a6;
-}
-
-.status-card-text {
-  max-width: min(24rem, calc(100% - 132px));
-  font-size: clamp(20px, 4.6vw, 27px);
-  line-height: 1.55;
+.hero-copy h1 {
+  font-size: clamp(28px, 8vw, 42px);
+  line-height: 1.25;
   letter-spacing: -0.03em;
-  color: #18181b;
+  font-weight: 500;
+  color: #0f1115;
+  margin: 0;
 }
 
-.status-card-location {
+/* GLASS PILL SKILLS */
+.hero-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.skill-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.skill-tag {
+  position: relative;
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(230, 232, 236, 0.9);
+  background: rgba(250, 250, 250, 0.7);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 4px 12px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   font-size: 14px;
-  color: #677180;
+  letter-spacing: 0.02em;
+  color: #555f6d;
+  cursor: pointer;
+  transition: all 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
 }
 
-.status-card-layer {
-  left: 16px;
-  right: 16px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(230, 232, 236, 0.78);
-  box-shadow:
-    0 16px 28px rgba(15, 23, 42, 0.03),
-    0 4px 10px rgba(15, 23, 42, 0.018);
-  transform: translateY(calc(var(--card-index) * 16px)) scale(calc(1 - var(--card-index) * 0.014));
-  transform-origin: top center;
-}
-
-.status-card-layer .status-card-time,
-.status-card-layer .status-card-text,
-.status-card-layer .status-card-location {
-  opacity: 0.54;
-}
-
-.status-card-photo-stack {
+.skill-tag::before {
+  content: '';
   position: absolute;
-  top: -28px;
-  right: clamp(-6px, -1vw, 0px);
-  width: clamp(136px, 32vw, 184px);
-  height: clamp(108px, 24vw, 142px);
-  pointer-events: none;
-  transition: opacity 180ms ease;
+  inset: 0;
+  background: rgba(15, 17, 21, 1);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: -1;
 }
 
-.status-card-photo-stack.is-visible {
+.skill-tag.active {
+  color: #fff;
+  border-color: rgba(15, 17, 21, 0.9);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+  transform: translateY(-2px);
+}
+
+.skill-tag.active::before {
   opacity: 1;
 }
 
-.status-card-photo-stack.is-hidden {
+.skill-content-container {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 400ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
   opacity: 0;
+  margin-top: -8px; /* Pull it slightly closer to the pills */
 }
 
-.status-card-photo-card {
-  position: absolute;
-  right: 18px;
-  bottom: 0;
+.skill-content-container.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.skill-content-inner {
   overflow: hidden;
-  border-radius: 18px;
-  background: #ebe7e1;
-  transform-origin: right bottom;
-  box-shadow:
-    0 10px 22px rgba(15, 23, 42, 0.08),
-    0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
-.status-card-photo-card img {
-  display: block;
+.skill-content-inner p {
+  padding: 18px 22px;
+  margin: 0;
+  background: linear-gradient(145deg, rgba(248,248,248,0.9), rgba(242,242,242,0.6));
+  border: 1px solid rgba(235, 235, 235, 0.8);
+  border-radius: 20px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #333a45;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 32px rgba(0, 0, 0, 0.03);
+}
+
+
+/* ==========================================================================
+   STATUS / MEMOS SECTION
+   ========================================================================== */
+.status-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Take all remaining vertical space */
+  padding-top: 16px;
+  min-height: 0; /* Crucial for flex children with hidden overflow */
+}
+
+.section-heading-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-left: 4px;
+}
+
+.section-heading-compact h2 {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: #8b95a3;
+  text-transform: uppercase;
+}
+
+.status-hint {
+  font-size: 12px;
+  color: #a0a7b3;
+  letter-spacing: 0.02em;
+}
+
+.stacked-cards.ios-style {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  touch-action: pan-x pan-y;
+  outline: none;
+}
+
+.ios-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* LET IT BREATHE: Height is 100% of the flex container minus safe bottom space */
+  height: calc(100% - 32px); 
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(252,252,251,0.96));
+  border: 1px solid rgba(232, 234, 237, 0.98);
+  border-radius: 36px; /* Larger, softer radius */
+  padding: 24px 28px;
+  box-shadow: 
+    0 16px 40px rgba(15,23,42,0.04),
+    0 4px 12px rgba(15,23,42,0.02),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1), 
+              opacity 400ms ease,
+              z-index 400ms ease;
+  
+  /* Downward Stack Logic */
+  transform: translateY(calc(var(--card-index) * 14px)) scale(calc(1 - var(--card-index) * 0.04));
+  opacity: calc(1 - var(--card-index) * 0.15);
+  z-index: calc(10 - var(--card-index));
+  will-change: transform, opacity;
+}
+
+.ios-card[data-card-index="0"] {
+  box-shadow: 
+    0 24px 54px rgba(15,23,42,0.06),
+    0 8px 24px rgba(15,23,42,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+/* Hide cards beyond the 3rd layer smoothly */
+.ios-card[data-card-index="3"],
+.ios-card[data-card-index="4"],
+.ios-card[data-card-index="5"] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(42px) scale(0.88);
+}
+
+.ios-card.swiping-up {
+  transform: translateY(-120px) scale(1.02);
+  opacity: 0;
+  transition: transform 300ms cubic-bezier(0.32, 0, 0.67, 0), opacity 250ms ease;
+}
+
+.ios-card-content {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+  align-items: flex-start;
+}
+
+.ios-card-text-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ios-card-time {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #87919f;
+  margin: 0;
+}
+
+.ios-card-text {
+  font-size: clamp(16px, 4vw, 20px);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  color: #1a1c20;
+  margin: 0;
+  /* Allow text to flow naturally in the taller card */
+}
+
+.ios-card-thumbnail {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 20px rgba(15,23,42,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  background: #ebe7e1;
+  position: relative;
+}
+
+.ios-card-thumbnail::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.04);
+  pointer-events: none;
+}
+
+.ios-card-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.photo-card-1 {
-  z-index: 3;
-  width: clamp(78px, 19vw, 106px);
-  height: clamp(96px, 23vw, 128px);
-  transform: translate(0, 0) rotate(0deg);
-}
-
-.photo-card-2 {
-  z-index: 2;
-  width: clamp(76px, 18.6vw, 104px);
-  height: clamp(94px, 22.4vw, 126px);
-  transform: translate(-4px, -2px) rotate(15deg);
-}
-
-.photo-card-3 {
-  z-index: 1;
-  width: clamp(74px, 18.2vw, 102px);
-  height: clamp(92px, 22vw, 124px);
-  transform: translate(-8px, -4px) rotate(30deg);
-}
-
-@media (max-width: 520px) {
-  .status-card-photo-stack {
-    top: -60px;
-    right: 4px;
-  }
-
-  .status-card-text {
-    max-width: calc(100% - 112px);
-  }
-}
-
-.status-card-layer .status-card-text {
-  font-size: clamp(18px, 4vw, 24px);
-}
-
-.status-card-layer:nth-of-type(2) {
-  z-index: 2;
-  height: calc(100% - 116px);
-  opacity: 0.8;
-}
-
-.status-card-layer:nth-of-type(3) {
-  z-index: 1;
-  left: 30px;
-  right: 30px;
-  height: calc(100% - 115px);
-  opacity: 0.7;
-}
-
+/* ==========================================================================
+   DESKTOP SPLIT-SCREEN ARCHITECTURE (Anti-Card)
+   ========================================================================== */
 @media (min-width: 840px) {
   .page-shell {
-    padding: 28px 28px 96px;
+    /* Transform to horizontal layout */
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6vw;
+    gap: 8vw;
+    height: 100vh; /* Using vh on desktop is safe */
+  }
+
+  .topbar {
+    position: fixed;
+    top: 32px;
+    left: 6vw;
+    right: 6vw;
+    z-index: 100;
   }
 
   .hero {
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-    align-items: center;
-    gap: 36px;
-    padding: 80px 0 60px;
+    flex: 1;
+    max-width: 520px;
+    padding: 0;
+    /* Center its own content vertically */
+    justify-content: center;
+    height: 100%;
   }
 
-  .avatar-block {
-    justify-content: flex-end;
+  .hero-compact-header {
+    gap: 32px;
   }
 
-  .stacked-cards {
-    min-height: 376px;
+  .hero-avatar-placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 28px;
   }
 
-  .status-card {
-    max-width: 560px;
+  .hero-copy h1 {
+    font-size: clamp(32px, 4vw, 56px);
+    line-height: 1.15;
   }
 
-  .status-card,
-  .status-card-main {
-    padding: 28px 28px 30px;
+  .hero-skills {
+    margin-top: 16px;
   }
 
-  .status-card-layer {
-    left: 18px;
-    right: 18px;
+  .skill-tag {
+    min-height: 42px;
+    padding: 0 22px;
+    font-size: 15px;
   }
 
-  .status-card-layer:nth-of-type(3) {
-    left: 34px;
-    right: 34px;
-  }
-}
-
-@media (max-width: 520px) {
-  .page-shell {
-    padding-top: 16px;
+  .skill-content-inner p {
+    font-size: 16px;
+    padding: 24px 28px;
   }
 
-  .menu-panel {
-    width: min(280px, calc(100vw - 24px));
+  .status-section {
+    flex: 1;
+    max-width: 440px;
+    /* Constrain the stack on desktop so it's not absurdly tall */
+    height: 65vh;
+    max-height: 600px;
+    padding-top: 0;
+    flex: none; /* Don't grow horizontally beyond max-width */
+    width: 100%;
   }
 
-  .stacked-cards {
-    min-height: 330px;
+  .ios-card {
+    /* Stack height is relative to the constrained status-section */
+    height: 100%;
+    padding: 32px 36px;
   }
 
-  .status-card,
-  .status-card-main {
-    gap: 16px;
-    padding: 22px 18px 24px;
-  }
-
-  .status-card-text {
-    max-width: none;
-    font-size: 20px;
-  }
-
-  .status-card-layer {
-    left: 12px;
-    right: 12px;
-  }
-
-  .status-card-layer:nth-of-type(3) {
-    left: 22px;
-    right: 22px;
+  .ios-card-thumbnail {
+    width: 88px;
+    height: 88px;
+    border-radius: 20px;
   }
 }
