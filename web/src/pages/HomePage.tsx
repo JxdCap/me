@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
-import { StillAlive } from '../components/StillAlive'
+import { StillAlive, cards } from '../components/StillAlive'
+import { ZineReader } from '../components/ZineReader'
 import '../styles/home.css'
 import '../styles/animations.css'
 
@@ -9,6 +10,7 @@ export function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
+  const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
 
   // PARALLAX EFFECT FOR DOT MATRIX
   const handlePointerMove = useCallback((e: React.PointerEvent | PointerEvent) => {
@@ -34,6 +36,8 @@ export function HomePage() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light')
   }
 
+  const isPushedBack = isMenuOpen || !!activeMemoId
+
   return (
     <main className="page-shell">
       <Header 
@@ -43,12 +47,19 @@ export function HomePage() {
         toggleTheme={toggleTheme}
       />
       
-      <div className={`main-content-container ${isMenuOpen ? 'is-pushed-back' : ''}`}>
+      <div className={`main-content-container ${isPushedBack ? 'is-pushed-back' : ''}`}>
         <Hero activeSkillId={activeSkillId} setActiveSkillId={setActiveSkillId} />
-        <StillAlive />
+        <StillAlive onOpenMemo={(id) => setActiveMemoId(id)} />
       </div>
 
-      <footer className={`page-footer ${activeSkillId ? 'is-hidden' : ''}`}>
+      <ZineReader 
+        isOpen={!!activeMemoId} 
+        onClose={() => setActiveMemoId(null)} 
+        activeMemoId={activeMemoId}
+        memos={cards}
+      />
+
+      <footer className={`page-footer ${activeSkillId || isPushedBack ? 'is-hidden' : ''}`}>
         *This is my zine. I write about "shit" I care about.
       </footer>
     </main>
