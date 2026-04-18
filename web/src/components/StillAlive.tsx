@@ -49,6 +49,7 @@ export const cards: StillAliveCard[] = [
 ]
 
 const SECTION_TITLE = '正在录入 / LIVE'
+const THRESHOLD = -80 // Apple level precision threshold
 
 function ProgressiveImage({ images }: { images: string[] }) {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -82,7 +83,6 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
   const [exitCardId, setExitCardId] = useState<string | null>(null)
   
   const swipeStartYRef = useRef<number | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (exitCardId) return
@@ -94,7 +94,11 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDragging || swipeStartYRef.current === null) return
     const deltaY = e.clientY - swipeStartYRef.current
-    if (deltaY < 0) {
+    
+    // Apple Tension Logic: Add strong resistance if dragging downwards
+    if (deltaY > 0) {
+      setDragY(Math.pow(deltaY, 0.65)) 
+    } else {
       setDragY(deltaY * 0.8)
     }
   }
@@ -106,13 +110,10 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
     
     const deltaY = e.clientY - (swipeStartYRef.current || 0)
     
-    if (dragY < -60) {
-      // TRIGGER EXIT
+    if (dragY < THRESHOLD) {
       const topCard = cardsArray[0]
       setExitCardId(topCard.id)
       
-      // The crucial part: The rest of the cards shift immediately in the state logic
-      // But visually they will transition smoothly via CSS
       setTimeout(() => {
         setCardsArray(prev => {
           const next = [...prev]
@@ -122,7 +123,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         })
         setExitCardId(null)
         setDragY(0)
-      }, 400) // Match CSS transition duration
+      }, 500)
     } else {
       if (Math.abs(deltaY) < 5) onOpenMemo(cardsArray[0].id)
       setDragY(0)
@@ -137,12 +138,13 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
           <div className="live-dot" />
           <h2 id="stillalive-title" className="typewriter">{SECTION_TITLE}</h2>
         </div>
-        <span className="status-hint">上滑回溯. REWIND</span>
+        <span className="status-hint" style={{ opacity: dragY < -20 ? 0.3 : 1, transition: 'opacity 0.3s' }}>
+          {dragY < THRESHOLD ? '可以放手了' : '上滑回溯. REWIND'}
+        </span>
       </div>
       
       <div
-        ref={containerRef}
-        className="stacked-cards ios-style"
+        className="stacked-cards ios-style apple-vision"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -154,30 +156,33 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         {cardsArray.map((card, index) => {
           const isExiting = card.id === exitCardId
           const isTop = index === 0 && !isExiting
-          
-          // Determine visual slot
-          // If a card is exiting, slots shift for everyone else immediately
           const slotIndex = exitCardId && !isExiting ? index - 1 : index
           
+          // Visual Bloom Logic: Bottom cards pulse when top card crosses threshold
+          const isCapturing = isDragging && dragY < THRESHOLD
+          const bloomScale = (isCapturing && slotIndex === 0 && !isTop) ? 1.02 : 1
+
           const style: CSSProperties = {
             zIndex: 100 - index,
-            // Use 3D transforms for iOS performance
-            // We use standard slot positions, but top card follows the finger
             transform: isTop 
-              ? `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.02}deg)`
+              ? `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.015}deg)`
               : isExiting 
-                ? `translate3d(0, -160px, 0) scale(1.05) rotate(-5deg)`
-                : `translate3d(0, ${slotIndex * 14}px, ${-slotIndex * 20}px) scale(${1 - slotIndex * 0.04})`,
+                ? `translate3d(0, -180px, 50px) scale(1.05) rotateX(10deg) rotate(-5deg)`
+                : `translate3d(0, ${slotIndex * 14}px, ${-slotIndex * 25}px) scale(${1 - slotIndex * 0.045}) rotateX(${slotIndex * -2}deg)`,
             
             opacity: isExiting 
               ? 0 
-              : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.15,
+              : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.18,
             
-            // Interaction dynamics: No transition when dragging top card
+            filter: `blur(${slotIndex * 0.5}px)`,
+            
             transition: (isTop && isDragging) 
               ? 'none' 
-              : 'transform 500ms cubic-bezier(0.23, 1, 0.32, 1), opacity 400ms ease-out',
+              : `transform 600ms cubic-bezier(0.23, 1, 0.32, 1), 
+                 opacity 500ms ease-out, 
+                 filter 500ms ease`,
             
+            scale: bloomScale,
             pointerEvents: index === 0 ? 'auto' : 'none'
           }
 
