@@ -43,18 +43,39 @@ const cards: StillAliveCard[] = [
 
 export function StillAlive() {
   const [cardsArray, setCardsArray] = useState(cards)
-  const [swiping, setSwiping] = useState(false)
+  const [dragY, setDragY] = useState(0)
+  const [isSwipingOut, setIsSwipingOut] = useState(false)
   const swipeStartYRef = useRef<number | null>(null)
+  const isDraggingRef = useRef(false)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (isSwipingOut) return
     swipeStartYRef.current = e.clientY
+    isDraggingRef.current = true
+    setDragY(0)
   }
 
-  const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (swipeStartYRef.current === null) return
+  const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || swipeStartYRef.current === null) return
+    
     const deltaY = e.clientY - swipeStartYRef.current
-    if (deltaY < -36) {
-      setSwiping(true)
+    // Only track upward drag
+    if (deltaY < 0) {
+      // Add slight resistance
+      setDragY(deltaY * 0.85)
+    } else {
+      setDragY(0)
+    }
+  }
+
+  const handlePointerUp = () => {
+    if (!isDraggingRef.current) return
+    isDraggingRef.current = false
+    
+    const threshold = -60
+    if (dragY < threshold) {
+      // Trigger swipe out
+      setIsSwipingOut(true)
       setTimeout(() => {
         setCardsArray((prev) => {
           const next = [...prev]
@@ -62,8 +83,12 @@ export function StillAlive() {
           next.push(first)
           return next
         })
-        setSwiping(false)
-      }, 300)
+        setIsSwipingOut(false)
+        setDragY(0)
+      }, 400)
+    } else {
+      // Snap back
+      setDragY(0)
     }
     swipeStartYRef.current = null
   }
@@ -79,19 +104,34 @@ export function StillAlive() {
         role="list"
         tabIndex={0}
         onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         onPointerCancel={() => {
+          isDraggingRef.current = false
+          setDragY(0)
           swipeStartYRef.current = null
         }}
       >
         {cardsArray.slice(0, MAX_VISIBLE_CARDS).map((card, index) => {
           const isTopCard = index === 0
+          
+          // Calculate real-time styles for the top card
+          const dragStyle: CSSProperties = isTopCard ? {
+            transform: `translateY(calc(var(--card-index) * 14px + ${dragY}px)) scale(calc(1 - var(--card-index) * 0.04)) rotate(${dragY * 0.02}deg)`,
+            transition: isDraggingRef.current ? 'none' : undefined,
+            opacity: isSwipingOut ? 0 : undefined,
+          } : {}
+
           return (
             <article
               key={card.id}
-              className={`ios-card ${isTopCard && swiping ? 'swiping-up' : ''}`}
+              className={`ios-card ${isTopCard && isSwipingOut ? 'swiping-out' : ''}`}
               data-card-index={index}
-              style={{ '--card-index': index } as CSSProperties}
+              style={{ 
+                '--card-index': index,
+                ...dragStyle
+              } as CSSProperties}
             >
               <div className="ios-card-content">
                 <div className="ios-card-text-area">

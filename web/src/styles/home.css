@@ -291,6 +291,12 @@
   font-size: 14px;
   line-height: 1.6;
   margin: 12px 0 0; /* Add top spacing inside the animated grid row */
+  transform: translateY(-10px);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+}
+
+.skill-content-container.expanded .skill-content-inner p {
+  transform: translateY(0);
 }
 
 /* ==========================================================================
