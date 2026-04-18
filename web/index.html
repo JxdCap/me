@@ -4,9 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>个人主页</title>
+    <!-- Masterclass Theme Initter: Prevents Flash of Unstyled Content -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('me-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.style.backgroundColor = theme === 'dark' ? '#0e0e11' : '#ffffff';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-  </html>
+</html>

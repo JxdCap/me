@@ -304,15 +304,16 @@
   font-size: 13px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .skill-tag.active {
   background: var(--pill-active-bg);
   color: var(--pill-active-text);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-/* FOCUS HIERARCHY */
 .skill-tags.has-active .skill-tag:not(.active) {
   opacity: 0.4;
   filter: grayscale(1);
@@ -332,12 +333,6 @@
 .skill-content-inner {
   min-height: 0;
   overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.skill-content-container.expanded .skill-content-inner {
-  opacity: 1;
 }
 
 .skill-content-inner p {
@@ -350,10 +345,12 @@
   margin: 12px 0 0;
   transform: translateY(-10px);
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+  opacity: 0;
 }
 
 .skill-content-container.expanded .skill-content-inner p {
   transform: translateY(0);
+  opacity: 1;
 }
 
 /* ==========================================================================
@@ -459,6 +456,7 @@
   transform: rotate(1.5deg);
   transform-origin: center right;
   border: 1px solid var(--border-color);
+  position: relative;
 }
 
 /* PROGRESSIVE IMAGE STYLES */
@@ -474,18 +472,13 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-}
-
-.progressive-image-wrap.is-loaded .main-img {
-  animation: image-reveal 0.8s ease forwards;
+  display: block;
 }
 
 .progressive-image-wrap .img-placeholder {
   position: absolute;
   inset: 0;
   background: var(--card-bg);
-  backdrop-filter: blur(10px);
 }
 
 /* ==========================================================================
@@ -659,8 +652,7 @@
   overflow: hidden;
   border-radius: 12px;
   background: var(--border-color);
-  cursor: zoom-in;
-  aspect-ratio: 4/3; /* Fixed aspect ratio for skeleton */
+  aspect-ratio: 4/3; 
 }
 
 .zine-image-item img {
@@ -670,7 +662,6 @@
   display: block;
 }
 
-/* SKELETON LOADER ANIMATION */
 .skeleton-loader {
   position: absolute;
   inset: 0;
@@ -678,11 +669,6 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   background-color: var(--border-color);
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }
 
 .images-1 { grid-template-columns: 1fr; }
@@ -758,77 +744,6 @@
   .zine-article { margin-bottom: 80px; }
   .zine-article-body { font-size: 16px; }
   .zine-header { padding: 0 16px; height: 64px; }
-}
-
-/* ==========================================================================
-   LIGHTBOX (WECHAT STYLE WITH GALLERY)
-   ========================================================================== */
-.lightbox-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.98);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.lightbox-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  touch-action: none;
-  cursor: grab;
-}
-
-.lightbox-content:active { cursor: grabbing; }
-
-.lightbox-content img {
-  max-width: 95vw;
-  max-height: 75vh;
-  object-fit: contain;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-  border-radius: 4px;
-  user-select: none;
-}
-
-.lightbox-controls {
-  position: absolute;
-  bottom: 80px;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  color: #fff;
-  z-index: 1010;
-}
-
-.lightbox-controls button {
-  all: unset;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.3s;
-}
-
-.lightbox-controls button:hover { opacity: 1; }
-
-.idx-indicator {
-  font-family: monospace;
-  font-size: 14px;
-  letter-spacing: 0.1em;
-}
-
-.lightbox-hint {
-  position: absolute;
-  bottom: 40px;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
 }
 
 .scroll-progress-bar {
