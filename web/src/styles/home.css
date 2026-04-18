@@ -457,8 +457,8 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 0 8vw;
-    gap: 8vw;
+    padding: 0 10vw;
+    gap: 6vw;
     height: 100vh; /* Using vh on desktop is safe */
     position: relative; /* Add this for absolute footer positioning */
   }
@@ -474,14 +474,14 @@
   .topbar {
     position: fixed;
     top: 32px;
-    left: 6vw;
-    right: 6vw;
+    left: 8vw;
+    right: 8vw;
     z-index: 100;
   }
 
   .hero {
     flex: 1;
-    max-width: 520px;
+    max-width: 600px;
     padding: 0;
     /* Center its own content vertically */
     justify-content: center;
@@ -507,6 +507,11 @@
     margin-top: 16px;
   }
 
+  .skill-tags {
+    flex-wrap: nowrap;
+    gap: 16px;
+  }
+
   .skill-tag {
     min-height: 42px;
     padding: 0 22px;
@@ -520,19 +525,17 @@
 
   .status-section {
     flex: 1;
-    max-width: 440px;
-    /* Constrain the stack on desktop so it's not absurdly tall */
-    height: 65vh;
-    max-height: 600px;
+    max-width: 500px;
     padding-top: 0;
     flex: none; /* Don't grow horizontally beyond max-width */
     width: 100%;
+    align-self: center;
+    height: auto;
   }
 
   .ios-card {
-    /* Stack height is relative to the constrained status-section */
-    height: 100%;
-    padding: 32px 36px;
+    /* Dynamic height on PC now works by inheriting height: auto */
+    padding: 36px 40px;
   }
 
   .ios-card-thumbnail {
