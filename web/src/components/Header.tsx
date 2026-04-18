@@ -1,86 +1,109 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import {
-  House,
   Menu,
-  Music2,
-  Sparkles,
-  User,
-  UserRound,
+  X,
+  ArrowUpRight,
 } from 'lucide-react'
 
 const menuItems = [
-  { label: '首页', icon: House },
-  { label: '关于', icon: UserRound },
-  { label: '歌单', icon: Music2 },
-  { label: '小玩意', icon: Sparkles },
+  { label: '首页', path: '/' },
+  { label: '关于', path: '/about' },
+  { label: '作品', path: '/works' },
+  { label: '随笔', path: '/notes' },
 ]
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const menuAreaRef = useRef<HTMLDivElement | null>(null)
+  const [time, setTime] = useState(new Date())
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!menuAreaRef.current?.contains(event.target as Node)) {
-        setIsMenuOpen(false)
-      }
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMenuOpen(false)
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      window.removeEventListener('keydown', handleKeyDown)
-    }
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
   }, [])
 
-  return (
-    <header className="topbar">
-      <div className="topbar-actions">
-        <div className="menu-anchor" ref={menuAreaRef}>
-          <button
-            className="frost-control frost-control-menu"
-            type="button"
-            aria-label="打开菜单"
-            aria-expanded={isMenuOpen}
-            aria-controls="home-menu-panel"
-            onClick={() => setIsMenuOpen((value) => !value)}
-          >
-            <Menu size={18} strokeWidth={1.9} />
-            <span>菜单</span>
-          </button>
+  // MAGNETIC EFFECT LOGIC
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!buttonRef.current || isMenuOpen) return
+    
+    const rect = buttonRef.current.getBoundingClientRect()
+    const x = e.clientX - (rect.left + rect.width / 2)
+    const y = e.clientY - (rect.top + rect.height / 2)
+    
+    // Limits the pull distance
+    const distance = Math.sqrt(x * x + y * y)
+    if (distance < 100) {
+      buttonRef.current.style.setProperty('--magnet-x', `${x * 0.35}px`)
+      buttonRef.current.style.setProperty('--magnet-y', `${y * 0.35}px`)
+    } else {
+      buttonRef.current.style.setProperty('--magnet-x', '0px')
+      buttonRef.current.style.setProperty('--magnet-y', '0px')
+    }
+  }
 
-          <div
-            id="home-menu-panel"
-            className={`menu-panel${isMenuOpen ? ' is-open' : ''}`}
-            aria-hidden={!isMenuOpen}
-          >
-            <nav aria-label="首页菜单">
-              <ul className="menu-list">
-                {menuItems.map(({ label, icon: Icon }) => (
-                  <li key={label}>
-                    <button className="menu-item" type="button">
-                      <Icon size={18} strokeWidth={1.9} />
-                      <span>{label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+  const handlePointerLeave = () => {
+    if (buttonRef.current) {
+      buttonRef.current.style.setProperty('--magnet-x', '0px')
+      buttonRef.current.style.setProperty('--magnet-y', '0px')
+    }
+  }
+
+  return (
+    <>
+      <header className="topbar">
+        <div className="topbar-identity">
+          <div className="identity-dot" />
+          <span>ME</span>
+        </div>
+        
+        <button
+          ref={buttonRef}
+          className={`index-trigger ${isMenuOpen ? 'is-active' : ''}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+          aria-label={isMenuOpen ? "关闭索引" : "打开索引"}
+        >
+          <div className="trigger-pill">
+            <span className="trigger-label">{isMenuOpen ? 'CLOSE' : 'INDEX'}</span>
+            <div className="trigger-icon">
+              {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </div>
+          </div>
+        </button>
+      </header>
+
+      <div className={`index-overlay ${isMenuOpen ? 'is-open' : ''}`}>
+        <div className="index-content">
+          <nav className="index-nav">
+            {menuItems.map((item, index) => (
+              <a 
+                key={item.label} 
+                href={item.path} 
+                className="index-link"
+                style={{ '--index': index } as React.CSSProperties}
+              >
+                <span className="link-number">0{index + 1}</span>
+                <span className="link-label">{item.label}</span>
+                <ArrowUpRight className="link-arrow" size={24} strokeWidth={1.5} />
+              </a>
+            ))}
+          </nav>
+          
+          <div className="index-footer">
+            <div className="footer-item">
+              <span className="footer-label">LOCAL TIME</span>
+              <span className="footer-value">
+                {time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            </div>
+            <div className="footer-item">
+              <span className="footer-label">STATUS</span>
+              <span className="footer-value">COLLECTIVE MEMORY</span>
+            </div>
           </div>
         </div>
-
-        <button className="frost-control frost-control-login" type="button" aria-label="登录入口">
-          <User size={18} strokeWidth={1.9} />
-        </button>
       </div>
-    </header>
+    </>
   )
 }
