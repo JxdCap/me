@@ -269,6 +269,15 @@
   border-radius: 20px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.hero-avatar-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .hero-copy h1 {
@@ -424,8 +433,8 @@
   border-radius: 32px;
   padding: 24px 28px;
   box-shadow: var(--card-shadow);
-  z-index: calc(10 - var(--card-index));
   overflow: hidden;
+  will-change: transform, opacity;
 }
 
 .ios-card.swiping-out {

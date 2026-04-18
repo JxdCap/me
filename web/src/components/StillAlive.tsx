@@ -10,7 +10,7 @@ export type StillAliveCard = {
   time: string
   location: string
   text: string
-  images: string[] // Changed from single image to array
+  images: string[]
 }
 
 export const cards: StillAliveCard[] = [
@@ -49,7 +49,7 @@ export const cards: StillAliveCard[] = [
 ]
 
 const SECTION_TITLE = '正在录入 / LIVE'
-const MAX_VISIBLE_CARDS = 3
+const VISIBLE_COUNT = 4 // Render 4 cards for smooth loop transition
 
 function ProgressiveImage({ images }: { images: string[] }) {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -90,6 +90,8 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (isSwipingOut) return
+    // Lock pointer to capture moves even outside the element
+    e.currentTarget.setPointerCapture(e.pointerId)
     swipeStartYRef.current = e.clientY
     setIsDragging(true)
     setDragY(0)
@@ -97,7 +99,6 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDragging || swipeStartYRef.current === null) return
-    
     const deltaY = e.clientY - swipeStartYRef.current
     if (deltaY < 0) {
       setDragY(deltaY * 0.85)
@@ -109,6 +110,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
   const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDragging) return
     setIsDragging(false)
+    e.currentTarget.releasePointerCapture(e.pointerId)
     
     const deltaY = e.clientY - (swipeStartYRef.current || 0)
     const threshold = -60
@@ -124,11 +126,9 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         })
         setIsSwipingOut(false)
         setDragY(0)
-      }, 400)
+      }, 450)
     } else {
-      // If it was just a click, not a swipe
       if (Math.abs(deltaY) < 5) {
-        // Find the top card's ID
         onOpenMemo(cardsArray[0].id)
       }
       setDragY(0)
@@ -152,22 +152,29 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        onPointerCancel={() => {
+        onPointerCancel={(e) => {
           setIsDragging(false)
+          e.currentTarget.releasePointerCapture(e.pointerId)
           setDragY(0)
           swipeStartYRef.current = null
         }}
       >
-        {cardsArray.slice(0, MAX_VISIBLE_CARDS).map((card, index) => {
+        {cardsArray.slice(0, VISIBLE_COUNT).map((card, index) => {
           const isTopCard = index === 0
           
           const dragStyle: CSSProperties = isTopCard ? {
-            transform: `translateY(calc(var(--card-index) * 14px + ${dragY}px)) scale(calc(1 - var(--card-index) * 0.04)) rotate(${dragY * 0.02}deg)`,
+            // Apply real-time drag only to top card
+            transform: `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.02}deg)`,
             transition: !isDragging ? 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease' : 'none',
-            opacity: isSwipingOut ? 0 : undefined,
-            cursor: 'pointer'
-          } : {}
+            opacity: isSwipingOut ? 0 : 1,
+            zIndex: 100,
+          } : {
+            // Static stack for others
+            // On iOS/Safari, translate3d is more reliable for stacking than z-index alone
+            transform: `translate3d(0, ${index * 14}px, ${-index * 10}px) scale(${1 - index * 0.04})`,
+            opacity: index >= 3 ? 0 : 1 - index * 0.15,
+            zIndex: 10 - index,
+          }
 
           return (
             <article
