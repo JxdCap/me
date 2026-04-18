@@ -8,6 +8,7 @@ import {
 type StillAliveCard = {
   id: string
   time: string
+  location: string // Changed from generic to mandatory location/category
   text: string
   image?: string
 }
@@ -19,25 +20,29 @@ const cards: StillAliveCard[] = [
   {
     id: 'stillalive-1',
     time: '24H内',
+    location: '杭州',
     text: '最近还没来得及整理成完整段落，但这些零碎现场已经足够说明，我这阵子一直在路上。',
     image: '/images/stillalive-1-a.svg',
   },
   {
     id: 'stillalive-2',
     time: '12天前',
+    location: '上海',
     text: '把最近路上的几个小片段收在一起，像给这段时间留一个轻一点的记号。',
     image: '/images/stillalive-2-a.svg',
   },
   {
     id: 'stillalive-3',
     time: '2026.04.10',
+    location: '武汉',
     text: '有些东西先不急着讲完整，先让它们留在这里，等以后回头再慢慢辨认。',
     image: '/images/stillalive-3-a.svg',
   },
   {
     id: 'stillalive-4',
     time: '2026.03.15',
-    text: '一些过去的痕迹，埋在深处。',
+    location: '苏州',
+    text: '一些过去的痕迹，埋在深处。一切都在变，但我还在。',
   },
 ]
 
@@ -133,7 +138,6 @@ export function StillAlive() {
           
           const dragStyle: CSSProperties = isTopCard ? {
             transform: `translateY(calc(var(--card-index) * 14px + ${dragY}px)) scale(calc(1 - var(--card-index) * 0.04)) rotate(${dragY * 0.02}deg)`,
-            // Spring transition when NOT dragging
             transition: !isDragging ? 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease' : 'none',
             opacity: isSwipingOut ? 0 : undefined,
           } : {}
@@ -150,7 +154,7 @@ export function StillAlive() {
             >
               <div className="ios-card-content">
                 <div className="ios-card-text-area">
-                  <p className="ios-card-time">记录 // {card.time}</p>
+                  <p className="ios-card-time">{card.location} // {card.time}</p>
                   <p className="ios-card-text">{card.text}</p>
                 </div>
                 {card.image && (
