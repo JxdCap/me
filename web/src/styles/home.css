@@ -322,11 +322,10 @@
 }
 
 .section-heading-compact h2 {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: #8b95a3;
-  text-transform: uppercase;
+  font-size: clamp(28px, 6vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #111;
 }
 
 .status-hint {
@@ -348,8 +347,8 @@
   top: 0;
   left: 0;
   width: 100%;
-  /* LET IT BREATHE: Height is 100% of the flex container minus safe bottom space */
-  height: calc(100% - 32px); 
+  height: auto;
+  min-height: 160px;
   background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(252,252,251,0.96));
   border: 1px solid rgba(232, 234, 237, 0.98);
   border-radius: 36px; /* Larger, softer radius */
@@ -458,9 +457,18 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 0 6vw;
+    padding: 0 8vw;
     gap: 8vw;
     height: 100vh; /* Using vh on desktop is safe */
+    position: relative; /* Add this for absolute footer positioning */
+  }
+
+  .page-footer {
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+    padding: 0;
   }
 
   .topbar {
@@ -531,5 +539,55 @@
     width: 88px;
     height: 88px;
     border-radius: 20px;
+  }
+}
+
+.page-footer {
+  text-align: center;
+  font-size: 11px;
+  color: #a0a7b3;
+  padding: 16px 0 8px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* HERO ENTRANCE ANIMATIONS */
+.hero-copy h1 {
+  animation: hero-reveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.skill-tag {
+  opacity: 0;
+  animation: tag-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.skill-tag:nth-child(1) { animation-delay: 0.2s; }
+.skill-tag:nth-child(2) { animation-delay: 0.3s; }
+.skill-tag:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes tag-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

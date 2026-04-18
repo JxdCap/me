@@ -9,6 +9,9 @@ export function HomePage() {
       <Header />
       <Hero />
       <StillAlive />
+      <footer className="page-footer">
+        *This is my zine. I write about "shit" I care about.
+      </footer>
     </main>
   )
 }
