@@ -12,19 +12,19 @@ type StillAliveCard = {
   image?: string
 }
 
-const SECTION_TITLE = '我还在！'
+const SECTION_TITLE = '正在录入 / LIVE'
 const MAX_VISIBLE_CARDS = 3
 
 const cards: StillAliveCard[] = [
   {
     id: 'stillalive-1',
-    time: '一天前',
+    time: '24H内',
     text: '最近还没来得及整理成完整段落，但这些零碎现场已经足够说明，我这阵子一直在路上。',
     image: '/images/stillalive-1-a.svg',
   },
   {
     id: 'stillalive-2',
-    time: '12 天前',
+    time: '12天前',
     text: '把最近路上的几个小片段收在一起，像给这段时间留一个轻一点的记号。',
     image: '/images/stillalive-2-a.svg',
   },
@@ -41,27 +41,41 @@ const cards: StillAliveCard[] = [
   },
 ]
 
+function ProgressiveImage({ src, alt }: { src: string; alt: string }) {
+  const [isLoaded, setIsLoaded] = useState(false)
+  return (
+    <div className={`progressive-image-wrap ${isLoaded ? 'is-loaded' : ''}`}>
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setIsLoaded(true)}
+        className="main-img"
+      />
+      {!isLoaded && <div className="img-placeholder" />}
+    </div>
+  )
+}
+
 export function StillAlive() {
   const [cardsArray, setCardsArray] = useState(cards)
   const [dragY, setDragY] = useState(0)
   const [isSwipingOut, setIsSwipingOut] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const swipeStartYRef = useRef<number | null>(null)
-  const isDraggingRef = useRef(false)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (isSwipingOut) return
     swipeStartYRef.current = e.clientY
-    isDraggingRef.current = true
+    setIsDragging(true)
     setDragY(0)
   }
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current || swipeStartYRef.current === null) return
+    if (!isDragging || swipeStartYRef.current === null) return
     
     const deltaY = e.clientY - swipeStartYRef.current
-    // Only track upward drag
     if (deltaY < 0) {
-      // Add slight resistance
       setDragY(deltaY * 0.85)
     } else {
       setDragY(0)
@@ -69,12 +83,11 @@ export function StillAlive() {
   }
 
   const handlePointerUp = () => {
-    if (!isDraggingRef.current) return
-    isDraggingRef.current = false
+    if (!isDragging) return
+    setIsDragging(false)
     
     const threshold = -60
     if (dragY < threshold) {
-      // Trigger swipe out
       setIsSwipingOut(true)
       setTimeout(() => {
         setCardsArray((prev) => {
@@ -87,7 +100,6 @@ export function StillAlive() {
         setDragY(0)
       }, 400)
     } else {
-      // Snap back
       setDragY(0)
     }
     swipeStartYRef.current = null
@@ -96,8 +108,11 @@ export function StillAlive() {
   return (
     <section className="status-section" aria-labelledby="stillalive-title">
       <div className="section-heading-compact">
-        <h2 id="stillalive-title">{SECTION_TITLE}</h2>
-        <span className="status-hint">↑ 向上滑动翻看</span>
+        <div className="presence-indicator">
+          <div className="live-dot" />
+          <h2 id="stillalive-title" className="typewriter">{SECTION_TITLE}</h2>
+        </div>
+        <span className="status-hint">上滑回溯. REWIND</span>
       </div>
       <div
         className="stacked-cards ios-style"
@@ -108,7 +123,7 @@ export function StillAlive() {
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
         onPointerCancel={() => {
-          isDraggingRef.current = false
+          setIsDragging(false)
           setDragY(0)
           swipeStartYRef.current = null
         }}
@@ -116,10 +131,10 @@ export function StillAlive() {
         {cardsArray.slice(0, MAX_VISIBLE_CARDS).map((card, index) => {
           const isTopCard = index === 0
           
-          // Calculate real-time styles for the top card
           const dragStyle: CSSProperties = isTopCard ? {
             transform: `translateY(calc(var(--card-index) * 14px + ${dragY}px)) scale(calc(1 - var(--card-index) * 0.04)) rotate(${dragY * 0.02}deg)`,
-            transition: isDraggingRef.current ? 'none' : undefined,
+            // Spring transition when NOT dragging
+            transition: !isDragging ? 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease' : 'none',
             opacity: isSwipingOut ? 0 : undefined,
           } : {}
 
@@ -135,12 +150,12 @@ export function StillAlive() {
             >
               <div className="ios-card-content">
                 <div className="ios-card-text-area">
-                  <p className="ios-card-time">{card.time}</p>
+                  <p className="ios-card-time">记录 // {card.time}</p>
                   <p className="ios-card-text">{card.text}</p>
                 </div>
                 {card.image && (
                   <div className="ios-card-thumbnail">
-                    <img src={card.image} alt="" loading="lazy" />
+                    <ProgressiveImage src={card.image} alt="" />
                   </div>
                 )}
               </div>
