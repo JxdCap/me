@@ -3,6 +3,8 @@ import {
   Menu,
   X,
   ArrowUpRight,
+  Sun,
+  Moon,
 } from 'lucide-react'
 
 const menuItems = [
@@ -15,9 +17,11 @@ const menuItems = [
 interface HeaderProps {
   isMenuOpen: boolean
   setIsMenuOpen: (open: boolean) => void
+  theme: 'light' | 'dark'
+  toggleTheme: () => void
 }
 
-export function Header({ isMenuOpen, setIsMenuOpen }: HeaderProps) {
+export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: HeaderProps) {
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -37,9 +41,18 @@ export function Header({ isMenuOpen, setIsMenuOpen }: HeaderProps) {
   return (
     <>
       <header className="topbar">
-        <div className="topbar-identity">
-          <div className="identity-dot" />
-          <span>ME</span>
+        <div className="topbar-identity-group">
+          <div className="topbar-identity">
+            <div className="identity-dot" />
+            <span>ME</span>
+          </div>
+          <button 
+            className="theme-toggle" 
+            onClick={toggleTheme}
+            aria-label="切换主题"
+          >
+            {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+          </button>
         </div>
         
         <button

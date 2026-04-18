@@ -10,10 +10,13 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  /* AMBIENT DOT MATRIX */
-  background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-color: #fff;
+  
+  /* INTERACTIVE DOT MATRIX */
+  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: calc(var(--mouse-x, 0) * -10px) calc(var(--mouse-y, 0) * -10px);
+  background-color: var(--bg-base);
+  transition: background-color 0.5s ease, background-position 0.1s ease-out;
 }
 
 .main-content-container {
@@ -47,6 +50,12 @@
   flex-shrink: 0;
 }
 
+.topbar-identity-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .topbar-identity {
   display: flex;
   align-items: center;
@@ -54,13 +63,34 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: #111;
+  color: var(--text-main);
+}
+
+.theme-toggle {
+  all: unset;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--pill-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--text-main);
+  color: var(--bg-base);
+  transform: translateY(-1px);
 }
 
 .identity-dot {
   width: 6px;
   height: 6px;
-  background: #111;
+  background: var(--text-main);
   border-radius: 50%;
 }
 
@@ -79,7 +109,7 @@
 .trigger-text {
   font-size: 14px;
   font-weight: 500;
-  color: #111;
+  color: var(--text-main);
   letter-spacing: 0.05em;
 }
 
@@ -90,19 +120,20 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #f5f5f7;
-  color: #111;
+  background: var(--pill-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .simple-menu-trigger:hover .trigger-icon-wrap {
-  background: #111;
-  color: #fff;
+  background: var(--text-main);
+  color: var(--bg-base);
   transform: scale(1.1);
 }
 
 .simple-menu-trigger.is-active .trigger-icon-wrap {
-  background: #f43f5e;
+  background: var(--accent);
   color: #fff;
   transform: rotate(90deg) scale(1.1);
 }
@@ -113,9 +144,9 @@
 .index-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -151,7 +182,7 @@
   font-size: clamp(42px, 9vw, 84px);
   font-weight: 600;
   letter-spacing: -0.04em;
-  color: #111;
+  color: var(--text-main);
   text-decoration: none;
   opacity: 0;
   transform: translateY(30px);
@@ -167,7 +198,7 @@
 .link-number {
   font-size: 14px;
   font-weight: 400;
-  color: #999;
+  color: var(--text-muted);
   font-family: monospace;
 }
 
@@ -178,7 +209,7 @@
 }
 
 .index-link:hover {
-  color: #f43f5e;
+  color: var(--accent);
   transform: translateX(16px);
 }
 
@@ -191,7 +222,7 @@
   display: flex;
   gap: 64px;
   padding-top: 32px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--border-color);
   opacity: 0;
 }
 
@@ -210,13 +241,13 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
-  color: #aaa;
+  color: var(--text-dim);
 }
 
 .footer-value {
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: var(--text-muted);
   font-family: monospace;
 }
 
@@ -236,8 +267,8 @@
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: #f5f5f7;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
 }
 
 .hero-copy h1 {
@@ -245,7 +276,7 @@
   line-height: 1.3;
   letter-spacing: -0.03em;
   font-weight: 500;
-  color: #111;
+  color: var(--text-main);
   margin: 0;
   opacity: 0;
   animation: hero-reveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -273,19 +304,17 @@
   min-height: 36px;
   padding: 0 18px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: #fff;
+  border: 1px solid var(--border-color);
+  background: var(--pill-bg);
   font-size: 13px;
-  color: #555;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.3s ease;
 }
 
 .skill-tag.active {
-  background: #111;
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
 }
 
 /* FOCUS HIERARCHY */
@@ -318,8 +347,8 @@
 
 .skill-content-inner p {
   padding: 18px 20px;
-  background: #f9f9fb;
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.6;
@@ -354,11 +383,12 @@
   font-size: clamp(26px, 6vw, 32px);
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--text-main);
 }
 
 .status-hint {
   font-size: 11px;
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .stacked-cards.ios-style {
@@ -374,11 +404,11 @@
   width: 100%;
   height: auto;
   min-height: 140px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 32px;
   padding: 24px 28px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--card-shadow);
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
   transform: translateY(calc(var(--card-index) * 14px)) scale(calc(1 - var(--card-index) * 0.04));
   opacity: calc(1 - var(--card-index) * 0.15);
@@ -396,6 +426,14 @@
   align-items: flex-start;
 }
 
+.ios-card-time {
+  color: var(--text-muted);
+}
+
+.ios-card-text {
+  color: var(--text-main);
+}
+
 .ios-card-thumbnail {
   width: 84px;
   height: 112px;
@@ -404,6 +442,7 @@
   flex-shrink: 0;
   transform: rotate(1.5deg);
   transform-origin: center right;
+  border: 1px solid var(--border-color);
 }
 
 .ios-card-thumbnail img {
@@ -466,7 +505,7 @@
 .page-footer {
   text-align: center;
   font-size: 11px;
-  color: #bbb;
+  color: var(--text-muted);
   padding: 16px 0 8px;
   flex-shrink: 0;
 }
