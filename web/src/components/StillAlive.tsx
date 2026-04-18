@@ -49,13 +49,11 @@ export const cards: StillAliveCard[] = [
 ]
 
 const SECTION_TITLE = '正在录入 / LIVE'
-const VISIBLE_COUNT = 4 // Render 4 cards for smooth loop transition
 
 function ProgressiveImage({ images }: { images: string[] }) {
   const [isLoaded, setIsLoaded] = useState(false)
   const hasMultiple = images.length > 1
   const firstImage = images[0]
-
   if (!firstImage) return null
 
   return (
@@ -68,11 +66,7 @@ function ProgressiveImage({ images }: { images: string[] }) {
         className="main-img"
       />
       {!isLoaded && <div className="img-placeholder" />}
-      {hasMultiple && (
-        <div className="photo-count-badge">
-          +{images.length - 1}
-        </div>
-      )}
+      {hasMultiple && <div className="photo-count-badge">+{images.length - 1}</div>}
     </div>
   )
 }
@@ -84,26 +78,24 @@ interface StillAliveProps {
 export function StillAlive({ onOpenMemo }: StillAliveProps) {
   const [cardsArray, setCardsArray] = useState(cards)
   const [dragY, setDragY] = useState(0)
-  const [isSwipingOut, setIsSwipingOut] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [exitCardId, setExitCardId] = useState<string | null>(null)
+  
   const swipeStartYRef = useRef<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (isSwipingOut) return
-    // Lock pointer to capture moves even outside the element
+    if (exitCardId) return
     e.currentTarget.setPointerCapture(e.pointerId)
     swipeStartYRef.current = e.clientY
     setIsDragging(true)
-    setDragY(0)
   }
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDragging || swipeStartYRef.current === null) return
     const deltaY = e.clientY - swipeStartYRef.current
     if (deltaY < 0) {
-      setDragY(deltaY * 0.85)
-    } else {
-      setDragY(0)
+      setDragY(deltaY * 0.8)
     }
   }
 
@@ -113,24 +105,26 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
     e.currentTarget.releasePointerCapture(e.pointerId)
     
     const deltaY = e.clientY - (swipeStartYRef.current || 0)
-    const threshold = -60
     
-    if (dragY < threshold) {
-      setIsSwipingOut(true)
+    if (dragY < -60) {
+      // TRIGGER EXIT
+      const topCard = cardsArray[0]
+      setExitCardId(topCard.id)
+      
+      // The crucial part: The rest of the cards shift immediately in the state logic
+      // But visually they will transition smoothly via CSS
       setTimeout(() => {
-        setCardsArray((prev) => {
+        setCardsArray(prev => {
           const next = [...prev]
           const first = next.shift()!
           next.push(first)
           return next
         })
-        setIsSwipingOut(false)
+        setExitCardId(null)
         setDragY(0)
-      }, 450)
+      }, 400) // Match CSS transition duration
     } else {
-      if (Math.abs(deltaY) < 5) {
-        onOpenMemo(cardsArray[0].id)
-      }
+      if (Math.abs(deltaY) < 5) onOpenMemo(cardsArray[0].id)
       setDragY(0)
     }
     swipeStartYRef.current = null
@@ -145,47 +139,50 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         </div>
         <span className="status-hint">上滑回溯. REWIND</span>
       </div>
+      
       <div
+        ref={containerRef}
         className="stacked-cards ios-style"
-        role="list"
-        tabIndex={0}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={(e) => {
+        onPointerCancel={() => {
           setIsDragging(false)
-          e.currentTarget.releasePointerCapture(e.pointerId)
           setDragY(0)
-          swipeStartYRef.current = null
         }}
       >
-        {cardsArray.slice(0, VISIBLE_COUNT).map((card, index) => {
-          const isTopCard = index === 0
+        {cardsArray.map((card, index) => {
+          const isExiting = card.id === exitCardId
+          const isTop = index === 0 && !isExiting
           
-          const dragStyle: CSSProperties = isTopCard ? {
-            // Apply real-time drag only to top card
-            transform: `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.02}deg)`,
-            transition: !isDragging ? 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease' : 'none',
-            opacity: isSwipingOut ? 0 : 1,
-            zIndex: 100,
-          } : {
-            // Static stack for others
-            // On iOS/Safari, translate3d is more reliable for stacking than z-index alone
-            transform: `translate3d(0, ${index * 14}px, ${-index * 10}px) scale(${1 - index * 0.04})`,
-            opacity: index >= 3 ? 0 : 1 - index * 0.15,
-            zIndex: 10 - index,
+          // Determine visual slot
+          // If a card is exiting, slots shift for everyone else immediately
+          const slotIndex = exitCardId && !isExiting ? index - 1 : index
+          
+          const style: CSSProperties = {
+            zIndex: 100 - index,
+            // Use 3D transforms for iOS performance
+            // We use standard slot positions, but top card follows the finger
+            transform: isTop 
+              ? `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.02}deg)`
+              : isExiting 
+                ? `translate3d(0, -160px, 0) scale(1.05) rotate(-5deg)`
+                : `translate3d(0, ${slotIndex * 14}px, ${-slotIndex * 20}px) scale(${1 - slotIndex * 0.04})`,
+            
+            opacity: isExiting 
+              ? 0 
+              : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.15,
+            
+            // Interaction dynamics: No transition when dragging top card
+            transition: (isTop && isDragging) 
+              ? 'none' 
+              : 'transform 500ms cubic-bezier(0.23, 1, 0.32, 1), opacity 400ms ease-out',
+            
+            pointerEvents: index === 0 ? 'auto' : 'none'
           }
 
           return (
-            <article
-              key={card.id}
-              className={`ios-card ${isTopCard && isSwipingOut ? 'swiping-out' : ''}`}
-              data-card-index={index}
-              style={{ 
-                '--card-index': index,
-                ...dragStyle
-              } as CSSProperties}
-            >
+            <article key={card.id} className="ios-card" style={style}>
               <div className="ios-card-content">
                 <div className="ios-card-text-area">
                   <p className="ios-card-time">{card.location} // {card.time}</p>
