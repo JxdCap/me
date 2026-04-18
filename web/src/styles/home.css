@@ -38,7 +38,7 @@
 }
 
 /* ==========================================================================
-   SIMPLE BUT PREMIUM TOPBAR
+   TOPBAR & CONTROLS
    ========================================================================== */
 .topbar {
   position: relative;
@@ -139,7 +139,7 @@
 }
 
 /* ==========================================================================
-   INDEX OVERLAY (EDITORIAL REVEAL)
+   INDEX OVERLAY
    ========================================================================== */
 .index-overlay {
   position: fixed;
@@ -433,6 +433,7 @@
   border-radius: 32px;
   padding: 24px 28px;
   box-shadow: var(--card-shadow);
+  z-index: calc(10 - var(--card-index));
   overflow: hidden;
   will-change: transform, opacity;
 }
@@ -491,7 +492,194 @@
 }
 
 /* ==========================================================================
-   DESKTOP RESPONSIVE
+   ZINE READER (THE ART PIECE)
+   ========================================================================== */
+.zine-reader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-base);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: calc(var(--mouse-x, 0) * -10px) calc(var(--mouse-y, 0) * -10px);
+}
+
+.zine-fixed-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 24px;
+  z-index: 250;
+  pointer-events: none;
+}
+
+.zine-fixed-controls button {
+  pointer-events: auto;
+}
+
+.zine-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0; 
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.zine-article {
+  max-width: 800px;
+  margin: 0 auto 160px;
+  position: relative;
+}
+
+.zine-article-header.sticky-header {
+  position: sticky;
+  top: 0; 
+  z-index: 100;
+  min-height: 80px;
+  padding: 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.header-glass-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  mask-image: linear-gradient(to bottom, black 60%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
+  opacity: 1;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.zine-article-meta {
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+.zine-article-id {
+  font-size: clamp(32px, 8vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 4px 0 0;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.article-inner-content {
+  padding: 0 24px;
+}
+
+.zine-article-body {
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--text-main);
+  margin-top: 48px;
+}
+
+.zine-image-grid {
+  display: grid;
+  gap: 16px;
+  margin: 48px 0;
+}
+
+.zine-image-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--border-color);
+  aspect-ratio: 4/3; 
+}
+
+.zine-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.skeleton-loader {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  background-color: var(--border-color);
+}
+
+.images-1 { grid-template-columns: 1fr; }
+.images-2 { grid-template-columns: 1fr 1fr; }
+.images-3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
+.images-3 .zine-image-item:first-child { grid-row: span 2; }
+.images-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.images-9 { grid-template-columns: repeat(3, 1fr); }
+
+.photo-count-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.zine-article-divider {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 100px;
+  color: var(--text-dim);
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.zine-end-cap {
+  text-align: center;
+  padding: 100px 0;
+  color: var(--text-dim);
+}
+
+.back-to-top {
+  all: unset;
+  cursor: pointer;
+  padding: 12px 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.back-to-top:hover {
+  background: var(--text-main);
+  color: var(--bg-base);
+}
+
+/* ==========================================================================
+   PC RESPONSIVE
    ========================================================================== */
 @media (min-width: 840px) {
   .page-shell {
@@ -539,6 +727,13 @@
     width: 114px;
     height: 152px;
   }
+
+  .zine-article-header.sticky-header {
+    padding: 24px 40px 20px;
+  }
+  .article-inner-content {
+    padding: 0 40px;
+  }
 }
 
 .page-footer {
@@ -547,14 +742,12 @@
   color: var(--text-muted);
   padding: 16px 0 8px;
   flex-shrink: 0;
-  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .page-footer.is-hidden {
   opacity: 0;
   transform: translateY(10px);
-  pointer-events: none;
 }
 
 @media (min-width: 840px) {
@@ -566,195 +759,6 @@
   }
 }
 
-.typewriter {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-  border-right: 2px solid var(--accent);
-  animation: typing 1.5s steps(30, end), blink-caret 0.75s step-end infinite;
-}
-
-.ios-card-time {
-  font-family: monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: var(--border-color);
-  padding: 2px 8px;
-  border-radius: 4px;
-  width: fit-content;
-}
-
-/* ==========================================================================
-   ZINE READER (IMMERSIVE OVERLAY)
-   ========================================================================== */
-.zine-reader {
-  position: fixed;
-  inset: 0;
-  background: var(--glass-bg);
-  backdrop-filter: blur(50px);
-  -webkit-backdrop-filter: blur(50px);
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: calc(var(--mouse-x, 0) * -10px) calc(var(--mouse-y, 0) * -10px);
-}
-
-.zine-header {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 32px;
-  flex-shrink: 0;
-}
-
-.zine-scroll-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 24px 100px;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-.zine-article {
-  max-width: 800px;
-  margin: 0 auto 120px;
-}
-
-.zine-article-header {
-  margin-bottom: 40px;
-}
-
-.zine-article-meta {
-  font-family: monospace;
-  font-size: 13px;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
-}
-
-.zine-article-id {
-  font-size: clamp(32px, 8vw, 64px);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  margin-top: 8px;
-}
-
-.zine-article-body {
-  font-size: 18px;
-  line-height: 1.8;
-  color: var(--text-main);
-  margin-top: 40px;
-}
-
-/* EDITORIAL IMAGE GRID */
-.zine-image-grid {
-  display: grid;
-  gap: 12px;
-  margin: 40px 0;
-}
-
-.zine-image-item {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  background: var(--border-color);
-  aspect-ratio: 4/3; 
-}
-
-.zine-image-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.skeleton-loader {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  background-color: var(--border-color);
-}
-
-.images-1 { grid-template-columns: 1fr; }
-.images-2 { grid-template-columns: 1fr 1fr; }
-.images-3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
-.images-3 .zine-image-item:first-child { grid-row: span 2; }
-.images-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-.images-9 { grid-template-columns: repeat(3, 1fr); }
-
-.photo-count-badge {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-family: monospace;
-}
-
-.zine-article-divider {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 80px;
-  color: var(--text-dim);
-}
-
-.divider-line {
-  flex: 1;
-  height: 1px;
-  background: var(--border-color);
-}
-
-.divider-text {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-}
-
-.zine-end-cap {
-  text-align: center;
-  padding: 80px 0;
-  color: var(--text-dim);
-}
-
-.zine-end-cap p {
-  font-size: 11px;
-  letter-spacing: 0.3em;
-  margin-bottom: 24px;
-}
-
-.back-to-top {
-  all: unset;
-  cursor: pointer;
-  padding: 12px 32px;
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-  font-size: 13px;
-  color: var(--text-main);
-  transition: all 0.3s ease;
-}
-
-.back-to-top:hover {
-  background: var(--text-main);
-  color: var(--bg-base);
-}
-
-@media (max-width: 640px) {
-  .zine-article { margin-bottom: 80px; }
-  .zine-article-body { font-size: 16px; }
-  .zine-header { padding: 0 16px; height: 64px; }
-}
-
 .scroll-progress-bar {
   position: absolute;
   top: 0;
@@ -763,5 +767,5 @@
   height: 2px;
   background: var(--accent);
   transform-origin: 0%;
-  z-index: 210;
+  z-index: 300;
 }

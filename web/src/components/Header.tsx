@@ -40,7 +40,7 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: Header
 
   return (
     <>
-      <header className="topbar">
+      <header className="topbar" style={{ animation: 'fade-in-down 0.8s ease forwards' }}>
         <div className="topbar-identity-group">
           <div className="topbar-identity">
             <div className="identity-dot" />

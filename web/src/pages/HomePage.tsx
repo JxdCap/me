@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
-import { StillAlive, cards } from '../components/StillAlive'
+import { StillAlive } from '../components/StillAlive'
 import { ZineReader } from '../components/ZineReader'
+import { cards } from '../lib/constants'
 import '../styles/home.css'
 import '../styles/animations.css'
 

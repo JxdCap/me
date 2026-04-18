@@ -4,49 +4,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-
-export type StillAliveCard = {
-  id: string
-  time: string
-  location: string
-  text: string
-  images: string[]
-}
-
-export const cards: StillAliveCard[] = [
-  {
-    id: 'stillalive-1',
-    time: '24H内',
-    location: '杭州',
-    text: '最近还没来得及整理成完整段落，但这些零碎现场已经足够说明，我这阵子一直在路上。',
-    images: [
-      '/images/stillalive-1-a.svg',
-      '/images/stillalive-1-b.svg',
-      '/images/stillalive-1-c.svg',
-    ],
-  },
-  {
-    id: 'stillalive-2',
-    time: '12天前',
-    location: '上海',
-    text: '把最近路上的几个小片段收在一起，像给这段时间留一个轻一点的记号。',
-    images: ['/images/stillalive-2-a.svg', '/images/stillalive-2-b.svg'],
-  },
-  {
-    id: 'stillalive-3',
-    time: '2026.04.10',
-    location: '武汉',
-    text: '有些东西先不急着讲完整，先让它们留在这里，等以后回头再慢慢辨认。',
-    images: ['/images/stillalive-3-a.svg'],
-  },
-  {
-    id: 'stillalive-4',
-    time: '2026.03.15',
-    location: '苏州',
-    text: '一些过去的痕迹，埋在深处。一切都在变，但我还在。',
-    images: [],
-  },
-]
+import { cards } from '../lib/constants'
 
 const SECTION_TITLE = '正在录入 / LIVE'
 const THRESHOLD = -80
@@ -175,21 +133,32 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
           const isCapturing = isDragging && dragY < THRESHOLD
           const bloomScale = (isCapturing && slotIndex === 0 && !isTop) ? 1.02 : 1
 
-          // DYNAMIC SHADOW & PARALLAX CALCULATIONS
           const shadowBlur = isTop ? Math.max(40, 40 + Math.abs(dragY) * 0.2) : 20
           const shadowOpacity = isTop ? Math.min(0.08, 0.08 - Math.abs(dragY) * 0.0002) : 0.04
           const textParallax = isTop ? dragY * 0.05 : 0
 
+          const ty = slotIndex * 14
+          const tz = slotIndex * -25
+          const sc = 1 - slotIndex * 0.045
+          const bl = slotIndex * 0.5
+
           const style: CSSProperties = {
             zIndex: 100 - index,
+            '--ty': `${ty}px`,
+            '--tz': `${tz}px`,
+            '--sc': sc,
+            '--bl': `${bl}px`,
+            
+            animation: `card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${0.4 + index * 0.1}s backwards`,
+            
             transform: isTop 
               ? `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.015}deg)`
               : isExiting 
                 ? `translate3d(0, -250px, 100px) scale(1.1) rotateX(15deg) rotate(-8deg)`
-                : `translate3d(0, ${slotIndex * 14}px, ${-slotIndex * 25}px) scale(${1 - slotIndex * 0.045}) rotateX(${slotIndex * -2}deg)`,
+                : `translate3d(0, ${ty}px, ${tz}px) scale(${sc}) rotateX(${slotIndex * -2}deg)`,
             
             opacity: isExiting ? 0 : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.18,
-            filter: `blur(${slotIndex * 0.5}px)`,
+            filter: `blur(${bl}px)`,
             boxShadow: `0 ${shadowBlur}px ${shadowBlur * 2}px rgba(0,0,0,${shadowOpacity})`,
             
             transition: (isTop && isDragging) 
@@ -201,7 +170,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
             
             scale: bloomScale,
             pointerEvents: index === 0 ? 'auto' : 'none'
-          }
+          } as any
 
           return (
             <article key={card.id} className="ios-card" style={style}>
