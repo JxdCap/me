@@ -5,24 +5,27 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { cards } from '../lib/constants'
+import { cards, type StillAliveImage } from '../lib/constants'
 
 const SECTION_TITLE = '正在录入 / LIVE'
 const THRESHOLD = -80
 const TAP_MAX_DISTANCE = 8
 const TAP_MAX_DURATION = 280
 
-function ProgressiveImage({ images }: { images: string[] }) {
+function ProgressiveImage({ images }: { images: StillAliveImage[] }) {
   const [isLoaded, setIsLoaded] = useState(false)
   const hasMultiple = images.length > 1
   const firstImage = images[0]
   if (!firstImage) return null
 
   return (
-    <div className={`progressive-image-wrap ${isLoaded ? 'is-loaded' : ''}`}>
+    <div
+      className={`progressive-image-wrap ${isLoaded ? 'is-loaded' : ''}`}
+      style={{ '--image-tone': firstImage.tone } as CSSProperties}
+    >
       <img
-        src={firstImage}
-        alt=""
+        src={firstImage.src}
+        alt={firstImage.alt}
         loading="lazy"
         onLoad={() => setIsLoaded(true)}
         className="main-img"

@@ -13,7 +13,7 @@
 | `location` | Text | 否 | 地点、场景或内容分类 | `杭州` |
 | `captured_at` | DateTime | 否 | 内容发生时间。优先用于排序和显示 | `2026-04-18 20:30:00` |
 | `time_label` | Text | 否 | 面向界面的相对时间文案 | `24H内` |
-| `images` | Files | 否 | 图片资源，建议最多 9 张 | `[img1.jpg, img2.jpg]` |
+| `images` | Files / JSON | 否 | 图片资源，建议最多 9 张。前端可扩展为图片对象 | `[{ src, alt, tone }]` |
 | `status` | Select | 是 | 发布状态 | `draft`, `published`, `archived` |
 | `priority` | Number | 否 | 手动排序权重，数值越高越靠前 | `100` |
 | `created` | DateTime | 自动 | PocketBase 创建时间 | `2026-04-18` |
@@ -37,6 +37,18 @@
 - `captured_at`
 - `time_label`
 - `images`
+
+### 图片对象
+
+前端静态阶段可以把图片表示为对象：
+
+| 字段名 | 类型 | 说明 | 示例 |
+| :--- | :--- | :--- | :--- |
+| `src` | Text | 图片地址 | `/images/stillalive-1-a.svg` |
+| `alt` | Text | 图片替代文本，描述内容而不是装饰 | `路上的片段` |
+| `tone` | Text | 图片主色或近似色，用于加载 matte 和内容底色 | `#d8c5a3` |
+
+接入 PocketBase 后，`src` 可由文件字段生成，`alt` 和 `tone` 可以作为图片元数据保存。`tone` 不参与内容语义，只帮助图片加载前保持稳定、真实的内容环境。
 
 ### 排序规则
 

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import type { CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight } from 'lucide-react'
-import { type StillAliveCard } from '../lib/constants'
+import { type StillAliveCard, type StillAliveImage } from '../lib/constants'
 
 interface ZineReaderProps {
   isOpen: boolean
@@ -10,15 +11,18 @@ interface ZineReaderProps {
   memos: StillAliveCard[]
 }
 
-function ZineImage({ src }: { src: string }) {
+function ZineImage({ image }: { image: StillAliveImage }) {
   const [isLoaded, setIsLoaded] = useState(false)
   
   return (
-    <div className={`zine-image-item ${isLoaded ? 'is-loaded' : ''}`}>
+    <div
+      className={`zine-image-item ${isLoaded ? 'is-loaded' : ''}`}
+      style={{ '--image-tone': image.tone } as CSSProperties}
+    >
       {!isLoaded && <div className="skeleton-loader" />}
       <motion.img
-        src={src}
-        alt=""
+        src={image.src}
+        alt={image.alt}
         loading="lazy"
         onLoad={() => setIsLoaded(true)}
         initial={{ opacity: 0 }}
@@ -126,8 +130,8 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 <div className="article-inner-content">
                   {memo.images.length > 0 && (
                     <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
-                      {memo.images.map((img, i) => (
-                        <ZineImage key={i} src={img} />
+                      {memo.images.map((image, i) => (
+                        <ZineImage key={image.src} image={image} />
                       ))}
                     </div>
                   )}

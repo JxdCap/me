@@ -5,7 +5,8 @@ import {
   ArrowUpRight,
   Sun,
   Moon,
-  User
+  User,
+  Sparkles
 } from 'lucide-react'
 
 const menuItems = [
@@ -27,6 +28,7 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
   const [time, setTime] = useState(new Date())
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstIndexLinkRef = useRef<HTMLAnchorElement>(null)
+  const indexContentRef = useRef<HTMLDivElement>(null)
   const hasOpenedMenuRef = useRef(false)
 
   useEffect(() => {
@@ -36,11 +38,35 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMenuOpen(false)
+      if (!isMenuOpen) return
+
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false)
+        return
+      }
+
+      if (e.key !== 'Tab') return
+
+      const focusable = indexContentRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (!focusable || focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [setIsMenuOpen])
+  }, [isMenuOpen, setIsMenuOpen])
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -98,9 +124,17 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
         id="site-index"
         className={`index-overlay ${isMenuOpen ? 'is-open' : ''}`}
         aria-hidden={!isMenuOpen}
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) setIsMenuOpen(false)
+        }}
       >
-        <div className="index-content">
-          <nav className="index-nav">
+        <div className="index-content" ref={indexContentRef}>
+          <div className="index-kicker" aria-hidden="true">
+            <Sparkles size={15} />
+            <span>导航</span>
+          </div>
+
+          <nav className="index-nav" aria-label="站点导航">
             {menuItems.map((item, index) => (
               <a 
                 ref={index === 0 ? firstIndexLinkRef : undefined}
@@ -120,14 +154,14 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
           
           <div className="index-footer">
             <div className="footer-item">
-              <span className="footer-label">当前时间 / LOCAL TIME</span>
+              <span className="footer-label">当前时间</span>
               <span className="footer-value">
                 {time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
             <div className="footer-item">
-              <span className="footer-label">系统状态 / STATUS</span>
-              <span className="footer-value">正常运行 / COLLECTIVE MEMORY</span>
+              <span className="footer-label">当前位置</span>
+              <span className="footer-value">个人主页</span>
             </div>
           </div>
         </div>
