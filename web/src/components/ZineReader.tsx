@@ -104,7 +104,11 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
           <div className="zine-scroll-container" onScroll={handleScroll} ref={containerRef}>
             {orderedMemos.map((memo, index) => (
-              <article key={memo.id} className="zine-article" data-memo-id={memo.id}>
+              <article
+                key={memo.id}
+                className={`zine-article ${memo.images.length === 0 ? 'has-no-media' : ''}`}
+                data-memo-id={memo.id}
+              >
                 <header className="zine-entry-header">
                   <span className="zine-entry-index">{getMemoEntryLabel(memo.id)}</span>
                   <span className="zine-entry-meta">{memo.location} · {memo.time}</span>

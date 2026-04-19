@@ -75,7 +75,7 @@ body,
 }
 
 body {
-  min-width: 320px;
+  min-width: 390px;
   background-color: var(--bg-base);
 }
 

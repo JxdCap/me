@@ -692,10 +692,10 @@
 
 .reader-bar {
   position: absolute;
-  top: max(16px, env(safe-area-inset-top));
+  top: max(18px, env(safe-area-inset-top));
   left: 50%;
-  width: min(calc(100% - 32px), 520px);
-  min-height: 54px;
+  width: min(calc(100% - 36px), 520px);
+  min-height: 56px;
   padding: 6px 7px 6px 18px;
   border-radius: 999px;
   transform: translateX(-50%);
@@ -755,8 +755,8 @@
 
 .reader-close-button {
   all: unset;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   flex-shrink: 0;
   display: inline-flex;
@@ -787,7 +787,7 @@
 }
 
 .zine-reader.controls-receded .reader-bar {
-  width: min(calc(100% - 92px), 360px);
+  width: min(calc(100% - 84px), 368px);
   transform: translateX(-50%) translateY(-6px) scale(0.94);
   opacity: 0.64;
 }
@@ -803,7 +803,7 @@
 .zine-scroll-container {
   flex: 1;
   overflow-y: auto;
-  padding: calc(max(104px, env(safe-area-inset-top) + 86px)) 0 max(40px, env(safe-area-inset-bottom)); 
+  padding: calc(max(112px, env(safe-area-inset-top) + 92px)) 0 max(44px, env(safe-area-inset-bottom)); 
   -webkit-overflow-scrolling: touch;
   position: relative;
   overscroll-behavior: contain;
@@ -812,7 +812,7 @@
 .zine-article {
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(24px, 6vw, 40px);
   position: relative;
 }
 
@@ -836,18 +836,26 @@
 }
 
 .zine-article-body {
-  font-size: clamp(20px, 4.8vw, 28px);
-  line-height: 1.45;
+  font-size: clamp(21px, 5vw, 28px);
+  line-height: 1.46;
   color: var(--text-main);
   letter-spacing: 0;
   font-weight: 520;
   max-width: 18em;
 }
 
+.zine-article.has-no-media .zine-article-body {
+  padding-bottom: 10px;
+}
+
+.zine-article.has-no-media .zine-section-space {
+  height: clamp(104px, 18vh, 168px);
+}
+
 .zine-image-grid {
   display: grid;
-  gap: 12px;
-  margin: 28px 0 0;
+  gap: 14px;
+  margin: 30px 0 0;
   grid-auto-flow: dense;
 }
 
@@ -898,7 +906,52 @@
 }
 .images-9 { grid-template-columns: repeat(3, 1fr); }
 
-@media (max-width: 520px) {
+@media (max-width: 430px) {
+  .reader-bar {
+    top: max(18px, env(safe-area-inset-top));
+    width: min(calc(100% - 28px), 390px);
+    padding-left: 16px;
+  }
+
+  .reader-bar-label {
+    font-size: 12px;
+  }
+
+  .reader-bar-title {
+    font-size: 14px;
+  }
+
+  .zine-reader.controls-receded .reader-bar {
+    width: min(calc(100% - 72px), 344px);
+  }
+
+  .zine-scroll-container {
+    padding-top: calc(max(112px, env(safe-area-inset-top) + 90px));
+  }
+
+  .zine-article {
+    padding-inline: 24px;
+  }
+
+  .zine-entry-header {
+    margin-bottom: 16px;
+  }
+
+  .zine-article-body {
+    font-size: 22px;
+    line-height: 1.44;
+    max-width: 15.5em;
+  }
+
+  .zine-image-grid {
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .images-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .images-5,
   .images-6,
   .images-7,
