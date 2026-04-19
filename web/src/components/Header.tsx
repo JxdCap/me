@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Menu,
   X,
@@ -24,6 +24,9 @@ interface HeaderProps {
 
 export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: HeaderProps) {
   const [time, setTime] = useState(new Date())
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const firstIndexLinkRef = useRef<HTMLAnchorElement>(null)
+  const hasOpenedMenuRef = useRef(false)
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -38,15 +41,27 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: Header
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [setIsMenuOpen])
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      hasOpenedMenuRef.current = true
+      firstIndexLinkRef.current?.focus()
+    } else if (hasOpenedMenuRef.current) {
+      menuButtonRef.current?.focus()
+    }
+  }, [isMenuOpen])
+
   return (
     <>
       <header className="ios-nav-container">
         {/* LEFT CLUSTER */}
         <div className="nav-cluster-left">
           <button 
+            ref={menuButtonRef}
             className={`nav-btn-circle ${isMenuOpen ? 'is-active' : ''}`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="菜单"
+            aria-expanded={isMenuOpen}
+            aria-controls="site-index"
           >
             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -78,14 +93,20 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: Header
         </div>
       </header>
 
-      <div className={`index-overlay ${isMenuOpen ? 'is-open' : ''}`}>
+      <div
+        id="site-index"
+        className={`index-overlay ${isMenuOpen ? 'is-open' : ''}`}
+        aria-hidden={!isMenuOpen}
+      >
         <div className="index-content">
           <nav className="index-nav">
             {menuItems.map((item, index) => (
               <a 
+                ref={index === 0 ? firstIndexLinkRef : undefined}
                 key={item.label} 
                 href={item.path} 
                 className="index-link"
+                tabIndex={isMenuOpen ? 0 : -1}
                 style={{ '--index': index } as React.CSSProperties}
                 onClick={() => setIsMenuOpen(false)}
               >

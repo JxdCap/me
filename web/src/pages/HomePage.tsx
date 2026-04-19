@@ -10,9 +10,9 @@ import '../styles/animations.css'
 export function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    // Initial check from localStorage
     const saved = localStorage.getItem('me-theme')
-    return (saved as 'light' | 'dark') || 'light'
+    if (saved === 'light' || saved === 'dark') return saved
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)

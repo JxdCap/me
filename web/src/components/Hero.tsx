@@ -28,6 +28,7 @@ export function Hero({ activeSkillId, setActiveSkillId }: HeroProps) {
               key={skill.id}
               className={`skill-tag ${activeSkillId === skill.id ? 'active' : ''}`}
               onClick={() => setActiveSkillId(activeSkillId === skill.id ? null : skill.id)}
+              aria-pressed={activeSkillId === skill.id}
             >
               {skill.label}
             </button>

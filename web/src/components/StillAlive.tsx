@@ -2,12 +2,15 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { cards } from '../lib/constants'
 
 const SECTION_TITLE = '正在录入 / LIVE'
 const THRESHOLD = -80
+const TAP_MAX_DISTANCE = 8
+const TAP_MAX_DURATION = 280
 
 function ProgressiveImage({ images }: { images: string[] }) {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -41,14 +44,18 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
   const [exitCardId, setExitCardId] = useState<string | null>(null)
   
   const swipeStartYRef = useRef<number | null>(null)
+  const swipeStartXRef = useRef<number | null>(null)
+  const pointerDownTimeRef = useRef<number>(0)
   const lastTimeRef = useRef<number>(0)
   const velocityRef = useRef<number>(0)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (exitCardId) return
     e.currentTarget.setPointerCapture(e.pointerId)
+    swipeStartXRef.current = e.clientX
     swipeStartYRef.current = e.clientY
-    lastTimeRef.current = Date.now()
+    pointerDownTimeRef.current = Date.now()
+    lastTimeRef.current = pointerDownTimeRef.current
     setIsDragging(true)
   }
 
@@ -74,7 +81,10 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
     setIsDragging(false)
     e.currentTarget.releasePointerCapture(e.pointerId)
     
+    const deltaX = e.clientX - (swipeStartXRef.current || 0)
     const deltaY = e.clientY - (swipeStartYRef.current || 0)
+    const distance = Math.hypot(deltaX, deltaY)
+    const duration = Date.now() - pointerDownTimeRef.current
     
     // Velocity-aware Exit
     if (dragY < THRESHOLD || velocityRef.current < -1.5) {
@@ -93,10 +103,17 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         velocityRef.current = 0
       }, 500)
     } else {
-      if (Math.abs(deltaY) < 5) onOpenMemo(cardsArray[0].id)
+      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) onOpenMemo(cardsArray[0].id)
       setDragY(0)
     }
+    swipeStartXRef.current = null
     swipeStartYRef.current = null
+  }
+
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    onOpenMemo(cardsArray[0].id)
   }
 
   return (
@@ -117,13 +134,19 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
       
       <div
         className="stacked-cards ios-style apple-momentum"
+        role="button"
+        tabIndex={0}
+        aria-label="打开最新记录"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={() => {
           setIsDragging(false)
           setDragY(0)
+          swipeStartXRef.current = null
+          swipeStartYRef.current = null
         }}
+        onKeyDown={handleKeyDown}
       >
         {cardsArray.map((card, index) => {
           const isExiting = card.id === exitCardId

@@ -20,6 +20,10 @@
   --pill-bg: var(--material-control-glass);
   --pill-active-bg: rgba(17, 17, 19, 0.92);
   --pill-active-text: #ffffff;
+  --focus-ring: rgba(0, 122, 255, 0.36);
+  --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-control: 320ms;
+  --motion-sheet: 520ms;
   
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
   color: var(--text-main);
@@ -55,6 +59,7 @@
   --pill-bg: var(--material-control-glass);
   --pill-active-bg: rgba(245, 245, 247, 0.92);
   --pill-active-text: #0e0e11;
+  --focus-ring: rgba(10, 132, 255, 0.42);
 }
 
 * {
