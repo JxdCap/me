@@ -3,6 +3,7 @@ import { pb } from './pocketbase'
 
 const FALLBACK_IMAGE_TONE = '#c7c7cc'
 const MEMOS_COLLECTION = 'memos'
+const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
 
 type PocketBaseMemoRecord = {
   id: string
@@ -31,20 +32,50 @@ export function getPublishedMemos(): StillAliveCard[] {
   return fallbackCards.map(normalizeMemo)
 }
 
+function getShanghaiDateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: SHANGHAI_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date)
+
+  const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value || 0)
+
+  return {
+    year: getPart('year'),
+    month: getPart('month'),
+    day: getPart('day'),
+    hour: getPart('hour'),
+    minute: getPart('minute'),
+    second: getPart('second'),
+  }
+}
+
+function getShanghaiTimestamp(date: Date): number {
+  const { year, month, day, hour, minute, second } = getShanghaiDateParts(date)
+  return Date.UTC(year, month - 1, day, hour, minute, second)
+}
+
 function formatMemoTime(createdAt: string): string {
   const created = new Date(createdAt)
   const now = new Date()
-  const diffMs = now.getTime() - created.getTime()
-  const diffHours = Math.max(0, diffMs / (1000 * 60 * 60))
+  const diffMs = getShanghaiTimestamp(now) - getShanghaiTimestamp(created)
+  const diffMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)))
+  const diffHours = Math.floor(diffMinutes / 60)
   const diffDays = Math.floor(diffHours / 24)
 
-  if (diffHours < 24) return '24H内'
-  if (diffDays < 7) return `${diffDays || 1}天前`
+  if (diffMinutes < 60) return `${Math.max(diffMinutes, 1)}分钟前`
+  if (diffHours < 24) return `${Math.max(diffHours, 1)}小时前`
+  if (diffDays <= 7) return `${Math.max(diffDays, 1)}天前`
 
-  const year = created.getFullYear()
-  const month = String(created.getMonth() + 1).padStart(2, '0')
-  const day = String(created.getDate()).padStart(2, '0')
-  return `${year}.${month}.${day}`
+  const { year, month, day, hour, minute } = getShanghaiDateParts(created)
+  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
 function buildMemoImages(record: PocketBaseMemoRecord): StillAliveImage[] {
