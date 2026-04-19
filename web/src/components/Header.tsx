@@ -5,8 +5,7 @@ import {
   ArrowUpRight,
   Sun,
   Moon,
-  User,
-  Sparkles
+  User
 } from 'lucide-react'
 
 const menuItems = [
@@ -33,16 +32,10 @@ export function Header({
   isReceded = false,
   isHiddenFromAssistiveTech = false,
 }: HeaderProps) {
-  const [time, setTime] = useState(new Date())
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstIndexLinkRef = useRef<HTMLAnchorElement>(null)
   const indexContentRef = useRef<HTMLDivElement>(null)
   const hasOpenedMenuRef = useRef(false)
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -135,11 +128,6 @@ export function Header({
         }}
       >
         <div className="index-content" ref={indexContentRef}>
-          <div className="index-kicker" aria-hidden="true">
-            <Sparkles size={15} />
-            <span>导航</span>
-          </div>
-
           <nav className="index-nav" aria-label="站点导航">
             {menuItems.map((item, index) => (
               <a 
@@ -157,18 +145,7 @@ export function Header({
             ))}
           </nav>
           
-          <div className="index-footer">
-            <div className="footer-item">
-              <span className="footer-label">当前时间</span>
-              <span className="footer-value">
-                {time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
-            </div>
-            <div className="footer-item">
-              <span className="footer-label">当前位置</span>
-              <span className="footer-value">个人主页</span>
-            </div>
-          </div>
+          <p className="index-footer-note">这里放着一些页面，也放着还没写完的部分。</p>
         </div>
       </div>
     </>
