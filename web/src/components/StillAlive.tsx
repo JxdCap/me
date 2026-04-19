@@ -17,7 +17,7 @@ const TAP_MAX_DURATION = 280
 
 interface StillAliveProps {
   memos: StillAliveCard[]
-  onOpenMemo: (id: string) => void
+  onOpenMemo: (id: string, originRect?: DOMRect | null) => void
   onInteractionChange?: (isInteracting: boolean) => void
 }
 
@@ -36,10 +36,29 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
   const lastTimeRef = useRef<number>(0)
   const lastPointerYRef = useRef<number | null>(null)
   const velocityRef = useRef<number>(0)
+  const pendingAdvanceRef = useRef(false)
+  const topCardRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     setMemoStack(memos)
   }, [memos])
+
+  const finishAdvance = () => {
+    if (!pendingAdvanceRef.current || !exitCardId) return
+
+    pendingAdvanceRef.current = false
+    setMemoStack((prev) => {
+      const next = [...prev]
+      const first = next.shift()
+      if (first) next.push(first)
+      return next
+    })
+    setExitCardId(null)
+    setDragY(0)
+    velocityRef.current = 0
+    lastPointerYRef.current = null
+    onInteractionChange?.(false)
+  }
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (exitCardId) return
@@ -85,23 +104,12 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
     
     if (dragY < THRESHOLD || velocityRef.current < -1.5) {
       const topMemo = memoStack[0]
+      pendingAdvanceRef.current = true
       setExitCardId(topMemo.id)
-      
-      setTimeout(() => {
-        setMemoStack(prev => {
-          const next = [...prev]
-          const first = next.shift()!
-          next.push(first)
-          return next
-        })
-        setExitCardId(null)
-        setDragY(0)
-        velocityRef.current = 0
-        lastPointerYRef.current = null
-        onInteractionChange?.(false)
-      }, 500)
     } else {
-      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) onOpenMemo(memoStack[0].id)
+      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) {
+        onOpenMemo(memoStack[0].id, topCardRef.current?.getBoundingClientRect() ?? null)
+      }
       setDragY(0)
       velocityRef.current = 0
     }
@@ -113,7 +121,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'Enter' && e.key !== ' ') return
     e.preventDefault()
-    onOpenMemo(memoStack[0].id)
+    onOpenMemo(memoStack[0].id, topCardRef.current?.getBoundingClientRect() ?? null)
   }
 
   const thresholdProgress = Math.min(Math.max((-dragY / Math.abs(THRESHOLD)) || 0, 0), 1.18)
@@ -151,6 +159,8 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           setIsDragging(false)
           onInteractionChange?.(false)
           setDragY(0)
+          pendingAdvanceRef.current = false
+          setExitCardId(null)
           velocityRef.current = 0
           swipeStartXRef.current = null
           swipeStartYRef.current = null
@@ -212,6 +222,18 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
               key={memo.id}
               className={`ios-card ${memo.images.length === 0 ? 'has-no-image' : ''}`}
               style={style}
+              ref={isTop ? (node) => {
+                topCardRef.current = node
+              } : undefined}
+              onTransitionEnd={(event) => {
+                if (
+                  isExiting &&
+                  event.target === event.currentTarget &&
+                  event.propertyName === 'opacity'
+                ) {
+                  finishAdvance()
+                }
+              }}
             >
               <div
                 className={`ios-card-content ${slotIndex > 0 ? 'is-secondary' : ''}`}

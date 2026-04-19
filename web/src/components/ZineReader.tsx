@@ -10,11 +10,16 @@ interface ZineReaderProps {
   onClose: () => void
   activeMemoId: string | null
   memos: StillAliveCard[]
+  originRect?: {
+    x: number
+    y: number
+    width: number
+    height: number
+  } | null
 }
 
-export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderProps) {
+export function ZineReader({ isOpen, onClose, activeMemoId, memos, originRect }: ZineReaderProps) {
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [isScrolled, setIsScrolled] = useState(false)
   const [areControlsReceded, setAreControlsReceded] = useState(false)
   const [currentMemoId, setCurrentMemoId] = useState<string | null>(activeMemoId)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -28,7 +33,6 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     const delta = container.scrollTop - lastScrollTopRef.current
 
     setScrollProgress(progress)
-    setIsScrolled(container.scrollTop > 28)
 
     const focusLine = container.scrollTop + 140
     const articles = Array.from(container.querySelectorAll<HTMLElement>('[data-memo-id]'))
@@ -54,7 +58,6 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     if (isOpen) {
       document.body.style.overflow = 'hidden'
       setScrollProgress(0)
-      setIsScrolled(false)
       setAreControlsReceded(false)
       setCurrentMemoId(activeMemoId)
       lastScrollTopRef.current = 0
@@ -80,18 +83,47 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
   const orderedMemos = orderMemosForReader(activeMemoId, memos)
   const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
+  const originCenterX = originRect ? originRect.x + originRect.width / 2 : viewportWidth / 2
+  const originCenterY = originRect ? originRect.y + originRect.height / 2 : viewportHeight / 2
+  const initialScaleX = originRect && viewportWidth > 0 ? originRect.width / viewportWidth : 0.88
+  const initialScaleY = originRect && viewportHeight > 0 ? originRect.height / viewportHeight : 0.9
+  const initialTranslateX = viewportWidth > 0 ? originCenterX - viewportWidth / 2 : 0
+  const initialTranslateY = viewportHeight > 0 ? originCenterY - viewportHeight / 2 : 24
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className={`zine-reader ${isScrolled ? 'is-scrolled' : ''} ${areControlsReceded ? 'controls-receded' : ''}`}
+          className={`zine-reader ${areControlsReceded ? 'controls-receded' : ''}`}
           role="dialog"
           aria-modal="true"
           aria-label="阅读记录"
-          initial={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
-          animate={{ opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 0px)' }}
-          exit={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
+          initial={{
+            opacity: 0,
+            x: initialTranslateX,
+            y: initialTranslateY,
+            scaleX: initialScaleX,
+            scaleY: initialScaleY,
+            borderRadius: 32,
+          }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            y: 0,
+            scaleX: 1,
+            scaleY: 1,
+            borderRadius: 0,
+          }}
+          exit={{
+            opacity: 0,
+            x: initialTranslateX,
+            y: initialTranslateY,
+            scaleX: initialScaleX,
+            scaleY: initialScaleY,
+            borderRadius: 32,
+          }}
           transition={{ type: 'spring', damping: 30, stiffness: 200 }}
         >
           <div className="reader-bar">

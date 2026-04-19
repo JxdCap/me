@@ -64,8 +64,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px;
-  border-radius: 999px;
+  padding: 4px;
+  border-radius: 22px;
   background: var(--material-control-glass);
   border: 1px solid var(--glass-edge);
   box-shadow: var(--control-shadow);
@@ -84,11 +84,11 @@
 }
 
 .nav-cluster-left {
-  min-width: 108px;
+  min-width: 104px;
 }
 
 .nav-cluster-right {
-  min-width: 52px;
+  min-width: 50px;
   justify-content: center;
 }
 
@@ -99,13 +99,13 @@
 }
 
 .ios-nav-container.is-menu-open .nav-cluster-left {
-  transform: scale(1.01);
+  transform: scale(1.005);
   background: var(--material-control-glass-strong);
 }
 
 .ios-nav-container.is-menu-open .nav-cluster-right {
-  transform: translateY(-1px) scale(0.985);
-  opacity: 0.76;
+  transform: translateY(-1px) scale(0.992);
+  opacity: 0.82;
 }
 
 .nav-cluster::before,
@@ -141,7 +141,7 @@
   z-index: 1;
 }
 
-.nav-btn-circle, .nav-btn-pill, .nav-btn-segment {
+.nav-btn-circle, .nav-btn-segment {
   all: unset;
   cursor: pointer;
   display: inline-flex;
@@ -161,16 +161,7 @@
 .nav-btn-circle {
   width: 42px;
   height: 42px;
-  border-radius: 50%;
-}
-
-.nav-btn-pill {
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 560;
-  letter-spacing: 0;
+  border-radius: 18px;
 }
 
 .nav-btn-segment {
@@ -192,11 +183,11 @@
 .nav-cluster-controls::after {
   content: '';
   position: absolute;
-  top: 10px;
-  bottom: 10px;
+  top: 11px;
+  bottom: 11px;
   left: 50%;
   width: 1px;
-  background: color-mix(in srgb, var(--glass-edge) 72%, transparent);
+  background: color-mix(in srgb, var(--glass-edge) 58%, transparent);
   transform: translateX(-0.5px);
   pointer-events: none;
   z-index: 1;
@@ -214,18 +205,17 @@
   opacity: 0.46;
 }
 
-.nav-btn-circle:hover, .nav-btn-pill:hover, .nav-btn-segment:hover {
+.nav-btn-circle:hover, .nav-btn-segment:hover {
   background: rgba(var(--bg-base-rgb), 0.34);
   border-color: var(--glass-edge);
 }
 
-.nav-btn-circle:active, .nav-btn-pill:active, .nav-btn-segment:active {
+.nav-btn-circle:active, .nav-btn-segment:active {
   transform: scale(0.96);
   opacity: 0.8;
 }
 
 .nav-btn-circle:focus-visible,
-.nav-btn-pill:focus-visible,
 .nav-btn-segment:focus-visible,
 .skill-tag:focus-visible,
 .stacked-cards:focus-visible,
@@ -233,14 +223,6 @@
 .index-link:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
-}
-
-.nav-btn-circle.is-active,
-.nav-btn-pill.is-active {
-  background: var(--pill-active-bg);
-  color: var(--pill-active-text);
-  border-color: transparent;
-  transform: scale(0.98);
 }
 
 .nav-btn-segment.is-active {
@@ -626,11 +608,6 @@
 
 .ios-card.has-no-image {
   min-height: 132px;
-}
-
-.ios-card.swiping-out {
-  transform: translateY(-120px) scale(1.02);
-  opacity: 0;
 }
 
 .ios-card-content {

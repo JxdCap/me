@@ -10,6 +10,12 @@ import '../styles/animations.css'
 const memos = getPublishedMemos()
 type ThemePreference = 'system' | 'light' | 'dark'
 type ResolvedTheme = 'light' | 'dark'
+type ReaderOriginRect = {
+  x: number
+  y: number
+  width: number
+  height: number
+}
 
 function getSystemTheme(): ResolvedTheme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -25,6 +31,7 @@ export function HomePage() {
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme())
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
+  const [readerOriginRect, setReaderOriginRect] = useState<ReaderOriginRect | null>(null)
   const [isMemoInteracting, setIsMemoInteracting] = useState(false)
   const stillAliveRef = useRef<HTMLDivElement>(null)
   const resolvedTheme = themePreference === 'system' ? systemTheme : themePreference
@@ -65,6 +72,7 @@ export function HomePage() {
   const isPushedBack = isMenuOpen || !!activeMemoId
   const closeReader = () => {
     setActiveMemoId(null)
+    setReaderOriginRect(null)
     window.requestAnimationFrame(() => {
       stillAliveRef.current?.focus()
     })
@@ -89,7 +97,19 @@ export function HomePage() {
         <StillAlive
           ref={stillAliveRef}
           memos={memos}
-          onOpenMemo={(id) => setActiveMemoId(id)}
+          onOpenMemo={(id, originRect) => {
+            setActiveMemoId(id)
+            setReaderOriginRect(
+              originRect
+                ? {
+                    x: originRect.x,
+                    y: originRect.y,
+                    width: originRect.width,
+                    height: originRect.height,
+                  }
+                : null
+            )
+          }}
           onInteractionChange={setIsMemoInteracting}
         />
       </div>
@@ -99,6 +119,7 @@ export function HomePage() {
         onClose={closeReader} 
         activeMemoId={activeMemoId}
         memos={memos}
+        originRect={readerOriginRect}
       />
 
       <footer
