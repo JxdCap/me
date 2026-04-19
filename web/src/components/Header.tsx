@@ -20,9 +20,10 @@ interface HeaderProps {
   setIsMenuOpen: (open: boolean) => void
   theme: 'light' | 'dark'
   toggleTheme: () => void
+  isReceded?: boolean
 }
 
-export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: HeaderProps) {
+export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isReceded = false }: HeaderProps) {
   const [time, setTime] = useState(new Date())
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstIndexLinkRef = useRef<HTMLAnchorElement>(null)
@@ -52,7 +53,7 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: Header
 
   return (
     <>
-      <header className="ios-nav-container">
+      <header className={`ios-nav-container ${isReceded && !isMenuOpen ? 'is-context-receded' : ''}`}>
         {/* LEFT CLUSTER */}
         <div className="nav-cluster-left">
           <button 

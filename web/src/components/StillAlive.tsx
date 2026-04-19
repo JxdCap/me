@@ -35,9 +35,10 @@ function ProgressiveImage({ images }: { images: string[] }) {
 
 interface StillAliveProps {
   onOpenMemo: (id: string) => void
+  onInteractionChange?: (isInteracting: boolean) => void
 }
 
-export function StillAlive({ onOpenMemo }: StillAliveProps) {
+export function StillAlive({ onOpenMemo, onInteractionChange }: StillAliveProps) {
   const [cardsArray, setCardsArray] = useState(cards)
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -57,6 +58,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
     pointerDownTimeRef.current = Date.now()
     lastTimeRef.current = pointerDownTimeRef.current
     setIsDragging(true)
+    onInteractionChange?.(true)
   }
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -79,6 +81,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
   const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDragging) return
     setIsDragging(false)
+    onInteractionChange?.(false)
     e.currentTarget.releasePointerCapture(e.pointerId)
     
     const deltaX = e.clientX - (swipeStartXRef.current || 0)
@@ -101,6 +104,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         setExitCardId(null)
         setDragY(0)
         velocityRef.current = 0
+        onInteractionChange?.(false)
       }, 500)
     } else {
       if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) onOpenMemo(cardsArray[0].id)
@@ -128,7 +132,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
           <h2 id="stillalive-title" className="typewriter">{SECTION_TITLE}</h2>
         </div>
         <span className="status-hint">
-          {dragY < THRESHOLD ? '可以放手了' : '上滑回溯. REWIND'}
+          {dragY < THRESHOLD ? '松手切换' : '上滑看下一则'}
         </span>
       </div>
       
@@ -142,6 +146,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
         onPointerUp={handlePointerUp}
         onPointerCancel={() => {
           setIsDragging(false)
+          onInteractionChange?.(false)
           setDragY(0)
           swipeStartXRef.current = null
           swipeStartYRef.current = null
@@ -196,7 +201,7 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
           } as any
 
           return (
-            <article key={card.id} className="ios-card" style={style}>
+            <article key={card.id} className={`ios-card ${card.images.length === 0 ? 'has-no-image' : ''}`} style={style}>
               <div className="ios-card-content" style={{ transform: `translate3d(0, ${textParallax}px, 0)` }}>
                 <div className="ios-card-text-area">
                   <p className="ios-card-time">{card.location} // {card.time}</p>

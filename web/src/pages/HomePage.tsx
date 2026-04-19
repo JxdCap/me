@@ -16,6 +16,7 @@ export function HomePage() {
   })
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
+  const [isMemoInteracting, setIsMemoInteracting] = useState(false)
 
   // PARALLAX EFFECT FOR DOT MATRIX
   const handlePointerMove = useCallback((e: React.PointerEvent | PointerEvent) => {
@@ -51,11 +52,15 @@ export function HomePage() {
         setIsMenuOpen={setIsMenuOpen} 
         theme={theme}
         toggleTheme={toggleTheme}
+        isReceded={isMemoInteracting}
       />
       
       <div className={`main-content-container ${isPushedBack ? 'is-pushed-back' : ''}`}>
         <Hero activeSkillId={activeSkillId} setActiveSkillId={setActiveSkillId} />
-        <StillAlive onOpenMemo={(id) => setActiveMemoId(id)} />
+        <StillAlive
+          onOpenMemo={(id) => setActiveMemoId(id)}
+          onInteractionChange={setIsMemoInteracting}
+        />
       </div>
 
       <ZineReader 
@@ -66,7 +71,7 @@ export function HomePage() {
       />
 
       <footer className={`page-footer ${activeSkillId || isPushedBack ? 'is-hidden' : ''}`}>
-        *This is my zine. I write about "shit" I care about.
+        一些做过的界面，和还在路上的记录。
       </footer>
     </main>
   )

@@ -49,6 +49,15 @@
   flex-shrink: 0;
   animation: fade-in-down 0.8s ease forwards;
   pointer-events: none;
+  transition: transform var(--motion-control) var(--ease-apple),
+              opacity var(--motion-control) ease,
+              filter var(--motion-control) ease;
+}
+
+.ios-nav-container.is-context-receded {
+  transform: translateY(-6px) scale(0.96);
+  opacity: 0.58;
+  filter: saturate(0.92);
 }
 
 .nav-cluster-left, .nav-cluster-right {
@@ -86,6 +95,7 @@
     linear-gradient(135deg, rgba(255, 255, 255, 0.56), transparent 42%),
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.38), transparent 58%);
   opacity: 0.72;
+  transition: opacity var(--motion-control) ease;
 }
 
 .nav-cluster-left::after,
@@ -94,6 +104,11 @@
   box-shadow:
     inset 0 -1px 1px var(--glass-edge-dark),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.ios-nav-container.is-context-receded .nav-cluster-left::before,
+.ios-nav-container.is-context-receded .nav-cluster-right::before {
+  opacity: 0.42;
 }
 
 .nav-cluster-left > *,
@@ -498,7 +513,8 @@
   left: 0;
   width: 100%;
   height: auto;
-  min-height: 142px;
+  min-height: 152px;
+  max-height: 176px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 28px;
@@ -506,6 +522,10 @@
   box-shadow: var(--card-shadow);
   overflow: hidden;
   will-change: transform, opacity;
+}
+
+.ios-card.has-no-image {
+  min-height: 136px;
 }
 
 .ios-card.swiping-out {
@@ -517,6 +537,12 @@
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  height: 100%;
+}
+
+.ios-card-text-area {
+  flex: 1;
+  min-width: 0;
 }
 
 .ios-card-time {
@@ -535,6 +561,14 @@
   font-size: 17px;
   line-height: 1.54;
   margin-top: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ios-card.has-no-image .ios-card-text {
+  max-width: 34em;
 }
 
 .ios-card-thumbnail {
@@ -547,6 +581,17 @@
   transform-origin: center right;
   border: 1px solid var(--border-color);
   position: relative;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+  background: var(--surface-content);
+}
+
+.ios-card-thumbnail::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  pointer-events: none;
 }
 
 /* PROGRESSIVE IMAGE STYLES */
