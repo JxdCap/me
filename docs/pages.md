@@ -44,6 +44,12 @@
 
 用户看到身份、技能入口和最新动态。顶部功能岛保持可用，但视觉上轻于正文标题。
 
+当前阶段 `HomePage` 是页面级数据装配层：
+
+- `memos` 从 PocketBase 异步读取；
+- `Hero`、技能标签和页脚文案仍来自前端静态内容；
+- `StillAlive` 和 `ZineReader` 只消费统一 memo 结构，不直接知道 PocketBase 字段。
+
 ### Skill Focus
 
 点击技能标签后进入轻聚焦状态。
@@ -80,6 +86,8 @@ Index 用于导航，不用于展示内容详情。
 - 顶部 `reader-bar` 以 Liquid Glass 形式浮在内容之上。
 - `reader-bar` 显示当前记录上下文，并随滚动更新。
 - 滚动后 `reader-bar` 收缩，给内容让位。
+
+当前实现已回退为更干净的 overlay 切换，不再使用来源卡片位置驱动的展开动画。
 
 Reader 是唯一允许原生纵向滚动的主空间。
 

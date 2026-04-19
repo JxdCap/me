@@ -1,155 +1,70 @@
 # 数据模型与 PocketBase 映射
 
-数据模型服务于内容表达，不服务于装饰。字段应稳定、可迁移、可直接驱动前端内容层和功能层。
+当前阶段只接入一张 `memos` 表。Hero、技能标签和主页固定信息仍保留前端静态内容，等后续再进入系统表。
 
 ## 1. `memos`
 
-个人动态记录。它是首页 Still Alive Stack 和 Zine Reader 的核心数据源。
+个人动态记录。它是首页 `StillAlive` 和 `ZineReader` 的唯一远端数据源。
 
-| 字段名 | 类型 | 必填 | 说明 | 示例 |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | ID | 是 | 唯一索引，用于前端定位和生成 entry 标识 | `stillalive-1` |
-| `text` | Text | 是 | 正文内容。可以支持轻量 Markdown，但首屏卡片只展示纯文本摘要 | `最近一直在路上...` |
-| `location` | Text | 否 | 地点、场景或内容分类 | `杭州` |
-| `captured_at` | DateTime | 否 | 内容发生时间。优先用于排序和显示 | `2026-04-18 20:30:00` |
-| `time_label` | Text | 否 | 面向界面的相对时间文案 | `24H内` |
-| `images` | Files / JSON | 否 | 图片资源，建议最多 9 张。前端可扩展为图片对象 | `[{ src, alt, tone }]` |
-| `status` | Select | 是 | 发布状态 | `draft`, `published`, `archived` |
-| `priority` | Number | 否 | 手动排序权重，数值越高越靠前 | `100` |
-| `created` | DateTime | 自动 | PocketBase 创建时间 | `2026-04-18` |
-| `updated` | DateTime | 自动 | PocketBase 更新时间 | `2026-04-19` |
-
-### 前端映射
-
-`StillAlive` 使用：
-
-- `id`
-- `text`
-- `location`
-- `time_label`
-- `images`
-
-`ZineReader` 使用：
-
-- `id`
-- `text`
-- `location`
-- `captured_at`
-- `time_label`
-- `images`
-
-### 图片对象
-
-前端静态阶段可以把图片表示为对象：
-
-| 字段名 | 类型 | 说明 | 示例 |
+| 字段名 | 类型 | 必填 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `src` | Text | 图片地址 | `/images/stillalive-1-a.svg` |
-| `alt` | Text | 图片替代文本，描述内容而不是装饰 | `路上的片段` |
-| `tone` | Text | 图片主色或近似色，用于加载 matte 和内容底色 | `#d8c5a3` |
-
-接入 PocketBase 后，`src` 可由文件字段生成，`alt` 和 `tone` 可以作为图片元数据保存。`tone` 不参与内容语义，只帮助图片加载前保持稳定、真实的内容环境。
+| `text` | Text | 是 | 正文内容，快捷指令里的主文本 |
+| `images` | File (multiple) | 否 | 多图上传，建议最多 9 张 |
+| `location` | Text | 否 | 位置文本，直接存快捷指令传入的值 |
+| `status` | Select | 是 | `published` / `hidden` |
+| `created` | Auto | 自动 | PocketBase 自动创建时间，直接作为发布时间 |
+| `updated` | Auto | 自动 | PocketBase 自动更新时间 |
 
 ### 排序规则
 
-默认排序：
-
 ```text
 status = "published"
-order by priority desc, captured_at desc, created desc
+order by created desc
 ```
 
-如果没有 `captured_at`，使用 `created` 兜底。
+## 2. 当前前端映射
 
-## 2. `profile`
+PocketBase 记录进入 UI 前，先在 `web/src/lib/memos.ts` 中适配为前端 memo 结构：
 
-个人身份配置。用于驱动首页 Hero 和全局文案。
+- `id`
+- `text`
+- `location`
+- `time`
+- `images`
 
-| 字段名 | 类型 | 必填 | 说明 | 示例 |
-| :--- | :--- | :--- | :--- | :--- |
-| `avatar` | File | 是 | 首页头像或个人图形标识 | `user-logo.png` |
-| `display_name` | Text | 是 | 页面身份名称 | `ME` |
-| `headline` | Text | 是 | 首页主标题 | `我把做过的界面、写下的话，慢慢放回这里。` |
-| `footer_text` | Text | 否 | 底部低优先级文案 | `This is my zine...` |
-| `theme_mode` | Select | 否 | 默认主题偏好 | `system`, `light`, `dark` |
-| `updated` | DateTime | 自动 | 更新时间 | `2026-04-19` |
+其中：
 
-### 设计约束
+- `time` 由 `created` 在前端格式化得到；
+- `images` 通过 PocketBase 文件 URL 生成；
+- 图片 `alt` 和 `tone` 目前使用前端 fallback，不在表中单独建字段。
 
-`headline` 是内容层主焦点。不要把功能说明、产品介绍或使用教程写进 headline。
+## 3. 当前适配层职责
 
-## 3. `skills`
+`web/src/lib/memos.ts` 现在承担三件事：
 
-技能标签和说明内容。用于 Hero 下方的轻交互。
+- `fetchPublishedMemos()`：从 PocketBase 读取 `published` memos，并在失败时回退到本地静态数据；
+- `orderMemosForReader(activeMemoId, memos)`：根据当前打开的 memo 生成阅读器顺序；
+- `getMemoEntryLabel(id)`：生成 UI 使用的记录编号。
 
-| 字段名 | 类型 | 必填 | 说明 | 示例 |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | ID | 是 | 技能唯一标识 | `design` |
-| `label` | Text | 是 | 标签短文案 | `做界面` |
-| `content` | Text | 是 | 展开后的说明 | `追求像素级完美...` |
-| `sort_order` | Number | 是 | 展示顺序 | `10` |
-| `is_visible` | Bool | 是 | 是否在首页展示 | `true` |
+`HomePage` 只负责持有 memo 状态并传给 `StillAlive` / `ZineReader`，不直接处理 PocketBase 字段。
 
-### 前端映射
+## 4. 本地状态
 
-Skill tag 是功能控件，`content` 展开后是内容层。两者在视觉上应使用不同材质。
-
-## 4. `site_settings`
-
-站点级配置，适合放低频变化的系统行为。
-
-| 字段名 | 类型 | 说明 | 示例 |
-| :--- | :--- | :--- | :--- |
-| `default_theme` | Select | 默认主题 | `system` |
-| `max_memo_images` | Number | 单条 memo 最大图片数 | `9` |
-| `enable_motion` | Bool | 是否默认启用动效 | `true` |
-| `enable_dot_field` | Bool | 是否启用轻点阵背景 | `true` |
-
-## 5. 本地状态
-
-前端可以保留少量本地状态：
+前端保留少量界面偏好状态：
 
 | Key | 说明 |
 | :--- | :--- |
 | `me-theme` | 用户显式选择的主题模式。缺省时表示 `system`，跟随系统外观 |
 
-本地状态不能替代内容数据。它只用于记住设备上的界面偏好。
+本地状态不承载内容数据。
 
-## 6. 图片策略
+## 5. 后续再扩的部分
 
-图片是内容，不是装饰。
+当前阶段暂不引入：
 
-上传建议：
+- `site_meta`
+- `skills`
+- `site_settings`
+- 图片元数据子表
 
-- 保留原图用于阅读器。
-- 生成中等尺寸图用于卡片和网格。
-- 生成极小占位图或主色，用于加载前稳定布局。
-
-前端要求：
-
-- 所有图片区域必须有稳定比例。
-- 图片加载前保留空间，避免 layout shift。
-- 图片数量超过 1 张时显示数量提示，但提示属于轻量功能层，不应遮挡主体。
-
-## 7. 状态与发布
-
-`status` 用于保护内容流质量。
-
-- `draft`：仅管理端可见。
-- `published`：公开展示。
-- `archived`：保留数据，但不进入首页堆叠。
-
-首页只读取 `published`。管理端可以读取全部状态。
-
-## 8. 前端适配层
-
-后端数据进入 UI 前必须经过适配层，而不是让组件直接处理后端字段。
-
-当前静态阶段由 `web/src/lib/memos.ts` 承担这层职责：
-
-- `getPublishedMemos()`：返回首页可展示的 memo 列表。
-- `normalizeMemo()`：补齐图片 `alt` 和 `tone` fallback。
-- `orderMemosForReader(activeMemoId, memos)`：根据当前打开的 memo 生成阅读器顺序。
-- `getMemoEntryLabel(id)`：生成 UI 使用的记录编号。
-
-后续接 PocketBase 时，应优先替换这一层的数据来源。`HomePage`、`StillAlive` 和 `ZineReader` 不应该直接知道 PocketBase 的字段结构、查询参数或排序细节。
+等真实使用一段时间后，再根据实际发布习惯决定是否拆分系统表和图片元数据表。

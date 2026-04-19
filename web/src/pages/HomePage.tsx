@@ -3,11 +3,10 @@ import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
 import { StillAlive } from '../components/StillAlive'
 import { ZineReader } from '../components/ZineReader'
-import { getPublishedMemos } from '../lib/memos'
+import { fetchPublishedMemos, getPublishedMemos } from '../lib/memos'
 import '../styles/home.css'
 import '../styles/animations.css'
 
-const memos = getPublishedMemos()
 type ThemePreference = 'system' | 'light' | 'dark'
 type ResolvedTheme = 'light' | 'dark'
 
@@ -25,6 +24,7 @@ export function HomePage() {
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme())
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
+  const [memos, setMemos] = useState(() => getPublishedMemos())
   const [isMemoInteracting, setIsMemoInteracting] = useState(false)
   const stillAliveRef = useRef<HTMLDivElement>(null)
   const resolvedTheme = themePreference === 'system' ? systemTheme : themePreference
@@ -55,6 +55,19 @@ export function HomePage() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', resolvedTheme)
   }, [resolvedTheme])
+
+  useEffect(() => {
+    let isMounted = true
+
+    fetchPublishedMemos().then((nextMemos) => {
+      if (!isMounted || nextMemos.length === 0) return
+      setMemos(nextMemos)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const toggleTheme = () => {
     const nextTheme = resolvedTheme === 'light' ? 'dark' : 'light'

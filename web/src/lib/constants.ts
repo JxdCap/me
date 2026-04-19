@@ -12,7 +12,7 @@ export type StillAliveCard = {
   images: StillAliveImage[]
 }
 
-export const cards: StillAliveCard[] = [
+export const fallbackCards: StillAliveCard[] = [
   {
     id: 'stillalive-1',
     time: '24H内',

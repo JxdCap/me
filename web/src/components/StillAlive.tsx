@@ -143,7 +143,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
       </div>
       
       <div
-        className="stacked-cards ios-style apple-momentum"
+        className="stacked-cards ios-style"
         ref={ref}
         role="button"
         tabIndex={0}
