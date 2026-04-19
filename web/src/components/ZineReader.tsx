@@ -69,13 +69,10 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
           {/* TOP PROGRESS BAR */}
           <motion.div className="scroll-progress-bar" style={{ scaleX: scrollProgress }} />
 
-          {/* FIXED HEADER FOR CONTROLS */}
+          {/* UNIFIED iOS CLOSE BUTTON */}
           <div className="zine-fixed-controls">
-            <button className="simple-menu-trigger is-active" onClick={onClose}>
-              <span className="trigger-text">关闭</span>
-              <div className="trigger-icon-wrap">
-                <X size={22} />
-              </div>
+            <button className="nav-btn-circle is-active" onClick={onClose} aria-label="关闭">
+              <X size={20} />
             </button>
           </div>
 

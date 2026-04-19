@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Sun,
   Moon,
+  User
 } from 'lucide-react'
 
 const menuItems = [
@@ -29,7 +30,6 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: Header
     return () => clearInterval(timer)
   }, [])
 
-  // Close menu on ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsMenuOpen(false)
@@ -40,31 +40,42 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme }: Header
 
   return (
     <>
-      <header className="topbar" style={{ animation: 'fade-in-down 0.8s ease forwards' }}>
-        <div className="topbar-identity-group">
-          <div className="topbar-identity">
-            <div className="identity-dot" />
-            <span>ME</span>
-          </div>
+      <header className="ios-nav-container">
+        {/* LEFT CLUSTER */}
+        <div className="nav-cluster-left">
           <button 
-            className="theme-toggle" 
+            className={`nav-btn-circle ${isMenuOpen ? 'is-active' : ''}`}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="菜单"
+          >
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          
+          <button 
+            className="nav-btn-pill theme-toggle-pill"
             onClick={toggleTheme}
             aria-label="切换主题"
           >
-            {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+            {theme === 'light' ? (
+              <>
+                <Moon size={16} />
+                <span className="pill-text">深夜模式</span>
+              </>
+            ) : (
+              <>
+                <Sun size={16} />
+                <span className="pill-text">明亮模式</span>
+              </>
+            )}
           </button>
         </div>
-        
-        <button
-          className={`simple-menu-trigger ${isMenuOpen ? 'is-active' : ''}`}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label={isMenuOpen ? "关闭" : "菜单"}
-        >
-          <span className="trigger-text">{isMenuOpen ? '关闭' : '菜单'}</span>
-          <div className="trigger-icon-wrap">
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </div>
-        </button>
+
+        {/* RIGHT CLUSTER */}
+        <div className="nav-cluster-right">
+          <button className="nav-btn-circle" aria-label="个人中心">
+            <User size={20} />
+          </button>
+        </div>
       </header>
 
       <div className={`index-overlay ${isMenuOpen ? 'is-open' : ''}`}>
