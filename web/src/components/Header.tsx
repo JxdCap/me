@@ -88,14 +88,13 @@ export function Header({
   return (
     <>
       <header
-        className={`ios-nav-container ${isReceded && !isMenuOpen ? 'is-context-receded' : ''}`}
+        className={`ios-nav-container ${isReceded && !isMenuOpen ? 'is-context-receded' : ''} ${isMenuOpen ? 'is-menu-open' : ''}`}
         aria-hidden={isHiddenFromAssistiveTech}
       >
-        {/* LEFT CLUSTER */}
-        <div className="nav-cluster-left">
+        <div className="nav-cluster nav-cluster-left nav-cluster-controls">
           <button 
             ref={menuButtonRef}
-            className={`nav-btn-circle ${isMenuOpen ? 'is-active' : ''}`}
+            className={`nav-btn-segment nav-btn-menu ${isMenuOpen ? 'is-active' : ''}`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="菜单"
             aria-expanded={isMenuOpen}
@@ -105,27 +104,20 @@ export function Header({
           </button>
           
           <button 
-            className="nav-btn-pill theme-toggle-pill"
+            className="nav-btn-segment nav-btn-theme"
             onClick={toggleTheme}
             aria-label="切换主题"
           >
             {theme === 'light' ? (
-              <>
-                <Moon size={16} />
-                <span className="pill-text">深色</span>
-              </>
+              <Moon size={18} />
             ) : (
-              <>
-                <Sun size={16} />
-                <span className="pill-text">浅色</span>
-              </>
+              <Sun size={18} />
             )}
           </button>
         </div>
 
-        {/* RIGHT CLUSTER */}
-        <div className="nav-cluster-right">
-          <button className="nav-btn-circle" aria-label="个人中心">
+        <div className="nav-cluster nav-cluster-right">
+          <button className="nav-btn-circle nav-btn-utility" aria-label="个人中心">
             <User size={20} />
           </button>
         </div>
@@ -159,9 +151,8 @@ export function Header({
                 style={{ '--index': index } as React.CSSProperties}
                 onClick={() => setIsMenuOpen(false)}
               >
-                <span className="link-number">0{index + 1}</span>
                 <span className="link-label">{item.label}</span>
-                <ArrowUpRight className="link-arrow" size={28} strokeWidth={1.2} />
+                <ArrowUpRight className="link-arrow" size={20} strokeWidth={1.4} />
               </a>
             ))}
           </nav>

@@ -60,7 +60,7 @@
   filter: saturate(0.92);
 }
 
-.nav-cluster-left, .nav-cluster-right {
+.nav-cluster {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -75,12 +75,41 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
+  min-height: 52px;
+  transition: transform var(--motion-control) var(--ease-apple),
+              opacity var(--motion-control) ease,
+              background var(--motion-control) ease,
+              border-color var(--motion-control) ease,
+              box-shadow var(--motion-control) ease;
 }
 
-.nav-cluster-left::before,
-.nav-cluster-right::before,
-.nav-cluster-left::after,
-.nav-cluster-right::after {
+.nav-cluster-left {
+  min-width: 108px;
+}
+
+.nav-cluster-right {
+  min-width: 52px;
+  justify-content: center;
+}
+
+.nav-cluster-controls {
+  gap: 0;
+  padding: 4px;
+  border-radius: 22px;
+}
+
+.ios-nav-container.is-menu-open .nav-cluster-left {
+  transform: scale(1.01);
+  background: var(--material-control-glass-strong);
+}
+
+.ios-nav-container.is-menu-open .nav-cluster-right {
+  transform: translateY(-1px) scale(0.985);
+  opacity: 0.76;
+}
+
+.nav-cluster::before,
+.nav-cluster::after {
   content: '';
   position: absolute;
   pointer-events: none;
@@ -88,8 +117,7 @@
   z-index: 0;
 }
 
-.nav-cluster-left::before,
-.nav-cluster-right::before {
+.nav-cluster::before {
   inset: 1px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.56), transparent 42%),
@@ -98,25 +126,22 @@
   transition: opacity var(--motion-control) ease;
 }
 
-.nav-cluster-left::after,
-.nav-cluster-right::after {
+.nav-cluster::after {
   inset: 0;
   box-shadow:
     inset 0 -1px 1px var(--glass-edge-dark),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.ios-nav-container.is-context-receded .nav-cluster-left::before,
-.ios-nav-container.is-context-receded .nav-cluster-right::before {
+.ios-nav-container.is-context-receded .nav-cluster::before {
   opacity: 0.42;
 }
 
-.nav-cluster-left > *,
-.nav-cluster-right > * {
+.nav-cluster > * {
   z-index: 1;
 }
 
-.nav-btn-circle, .nav-btn-pill {
+.nav-btn-circle, .nav-btn-pill, .nav-btn-segment {
   all: unset;
   cursor: pointer;
   display: inline-flex;
@@ -148,18 +173,60 @@
   letter-spacing: 0;
 }
 
-.nav-btn-circle:hover, .nav-btn-pill:hover {
+.nav-btn-segment {
+  width: 44px;
+  height: 44px;
+  border-radius: 18px;
+  flex-shrink: 0;
+}
+
+.nav-btn-menu,
+.nav-btn-theme {
+  background: transparent;
+}
+
+.nav-btn-theme {
+  color: var(--text-muted);
+}
+
+.nav-cluster-controls::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 50%;
+  width: 1px;
+  background: color-mix(in srgb, var(--glass-edge) 72%, transparent);
+  transform: translateX(-0.5px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nav-btn-utility {
+  opacity: 0.86;
+}
+
+.nav-cluster-right .nav-btn-utility {
+  opacity: 0.92;
+}
+
+.ios-nav-container.is-menu-open .nav-cluster-left .nav-btn-utility {
+  opacity: 0.46;
+}
+
+.nav-btn-circle:hover, .nav-btn-pill:hover, .nav-btn-segment:hover {
   background: rgba(var(--bg-base-rgb), 0.34);
   border-color: var(--glass-edge);
 }
 
-.nav-btn-circle:active, .nav-btn-pill:active {
+.nav-btn-circle:active, .nav-btn-pill:active, .nav-btn-segment:active {
   transform: scale(0.96);
   opacity: 0.8;
 }
 
 .nav-btn-circle:focus-visible,
 .nav-btn-pill:focus-visible,
+.nav-btn-segment:focus-visible,
 .skill-tag:focus-visible,
 .stacked-cards:focus-visible,
 .back-to-top:focus-visible,
@@ -168,16 +235,22 @@
   outline-offset: 3px;
 }
 
-.nav-btn-circle.is-active {
+.nav-btn-circle.is-active,
+.nav-btn-pill.is-active {
   background: var(--pill-active-bg);
   color: var(--pill-active-text);
   border-color: transparent;
-  transform: rotate(90deg) scale(0.98);
+  transform: scale(0.98);
 }
 
-.pill-text {
-  margin-left: 8px;
-  font-weight: 600;
+.nav-btn-segment.is-active {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
+  border-color: transparent;
+}
+
+.ios-nav-container.is-menu-open .nav-btn-theme {
+  opacity: 0.54;
 }
 
 /* ==========================================================================
@@ -245,26 +318,30 @@
 .index-nav {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .index-link {
   display: flex;
-  align-items: baseline;
-  gap: 20px;
-  width: fit-content;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(100%, 620px);
   max-width: 100%;
-  padding: 8px 14px 10px 4px;
-  border-radius: 24px;
-  font-size: clamp(38px, 7.2vw, 70px);
-  font-weight: 640;
+  padding: 15px 18px 16px 18px;
+  border-radius: 26px;
+  font-size: clamp(28px, 5.4vw, 52px);
+  font-weight: 620;
   letter-spacing: 0;
   color: var(--text-main);
   text-decoration: none;
+  background: rgba(var(--bg-base-rgb), 0.08);
+  border: 1px solid transparent;
   opacity: 0;
   transform: translateY(16px) scale(0.985);
   transition: color var(--motion-control) ease,
               background var(--motion-control) ease,
+              border-color var(--motion-control) ease,
               transform var(--motion-control) var(--ease-apple),
               opacity var(--motion-sheet) ease;
 }
@@ -275,31 +352,25 @@
   transition-delay: calc(var(--index) * 0.055s + 0.08s);
 }
 
-.link-number {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
-  min-width: 22px;
-}
-
 .link-arrow {
-  opacity: 0;
-  transform: translate(-6px, 6px) scale(0.95);
+  opacity: 0.58;
+  transform: translate(0, 0) scale(0.96);
   transition: opacity var(--motion-control) ease,
               transform var(--motion-control) var(--ease-apple);
 }
 
 .index-link:hover,
 .index-link:focus-visible {
-  color: var(--accent);
-  background: rgba(var(--bg-base-rgb), 0.28);
-  transform: translateX(6px);
+  color: var(--text-main);
+  background: rgba(var(--bg-base-rgb), 0.16);
+  border-color: var(--glass-edge);
+  transform: translateY(-1px);
 }
 
 .index-link:hover .link-arrow,
 .index-link:focus-visible .link-arrow {
-  opacity: 1;
-  transform: translate(0, 0);
+  opacity: 0.9;
+  transform: translate(3px, -3px) scale(1);
 }
 
 .index-footer {
