@@ -111,7 +111,7 @@ Skill tag 是功能控件，`content` 展开后是内容层。两者在视觉上
 
 | Key | 说明 |
 | :--- | :--- |
-| `me-theme` | 用户选择的主题模式 |
+| `me-theme` | 用户显式选择的主题模式。缺省时表示 `system`，跟随系统外观 |
 
 本地状态不能替代内容数据。它只用于记住设备上的界面偏好。
 
@@ -140,3 +140,16 @@ Skill tag 是功能控件，`content` 展开后是内容层。两者在视觉上
 - `archived`：保留数据，但不进入首页堆叠。
 
 首页只读取 `published`。管理端可以读取全部状态。
+
+## 8. 前端适配层
+
+后端数据进入 UI 前必须经过适配层，而不是让组件直接处理后端字段。
+
+当前静态阶段由 `web/src/lib/memos.ts` 承担这层职责：
+
+- `getPublishedMemos()`：返回首页可展示的 memo 列表。
+- `normalizeMemo()`：补齐图片 `alt` 和 `tone` fallback。
+- `orderMemosForReader(activeMemoId, memos)`：根据当前打开的 memo 生成阅读器顺序。
+- `getMemoEntryLabel(id)`：生成 UI 使用的记录编号。
+
+后续接 PocketBase 时，应优先替换这一层的数据来源。`HomePage`、`StillAlive` 和 `ZineReader` 不应该直接知道 PocketBase 的字段结构、查询参数或排序细节。

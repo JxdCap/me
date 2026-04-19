@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -6,7 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { ContentImage } from './ContentImage'
-import { cards } from '../lib/constants'
+import { type StillAliveCard } from '../lib/constants'
 
 const SECTION_TITLE = '正在录入 / LIVE'
 const THRESHOLD = -80
@@ -14,12 +15,13 @@ const TAP_MAX_DISTANCE = 8
 const TAP_MAX_DURATION = 280
 
 interface StillAliveProps {
+  memos: StillAliveCard[]
   onOpenMemo: (id: string) => void
   onInteractionChange?: (isInteracting: boolean) => void
 }
 
-export function StillAlive({ onOpenMemo, onInteractionChange }: StillAliveProps) {
-  const [cardsArray, setCardsArray] = useState(cards)
+export function StillAlive({ memos, onOpenMemo, onInteractionChange }: StillAliveProps) {
+  const [cardsArray, setCardsArray] = useState(memos)
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [exitCardId, setExitCardId] = useState<string | null>(null)
@@ -29,6 +31,10 @@ export function StillAlive({ onOpenMemo, onInteractionChange }: StillAliveProps)
   const pointerDownTimeRef = useRef<number>(0)
   const lastTimeRef = useRef<number>(0)
   const velocityRef = useRef<number>(0)
+
+  useEffect(() => {
+    setCardsArray(memos)
+  }, [memos])
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (exitCardId) return

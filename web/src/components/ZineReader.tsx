@@ -3,17 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight } from 'lucide-react'
 import { ContentImage } from './ContentImage'
 import { type StillAliveCard } from '../lib/constants'
+import { getMemoEntryLabel, orderMemosForReader } from '../lib/memos'
 
 interface ZineReaderProps {
   isOpen: boolean
   onClose: () => void
   activeMemoId: string | null
   memos: StillAliveCard[]
-}
-
-function formatEntryNumber(id: string) {
-  const number = id.split('-')[1] || id
-  return `记录 ${number.padStart(2, '0')}`
 }
 
 export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderProps) {
@@ -69,8 +65,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
   if (!activeMemoId) return null
 
-  const startIndex = memos.findIndex(m => m.id === activeMemoId)
-  const orderedMemos = [...memos.slice(startIndex), ...memos.slice(0, startIndex)]
+  const orderedMemos = orderMemosForReader(activeMemoId, memos)
 
   return (
     <AnimatePresence>
@@ -99,7 +94,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                   <div className="header-glass-bg" />
                   <div className="header-content">
                     <span className="zine-article-meta">{memo.location} · {memo.time}</span>
-                    <h1 className="zine-article-id">{formatEntryNumber(memo.id)}</h1>
+                    <h1 className="zine-article-id">{getMemoEntryLabel(memo.id)}</h1>
                   </div>
                 </header>
                 

@@ -101,12 +101,12 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
             {theme === 'light' ? (
               <>
                 <Moon size={16} />
-                <span className="pill-text">深夜模式</span>
+                <span className="pill-text">深色</span>
               </>
             ) : (
               <>
                 <Sun size={16} />
-                <span className="pill-text">明亮模式</span>
+                <span className="pill-text">浅色</span>
               </>
             )}
           </button>

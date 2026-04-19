@@ -3,20 +3,30 @@ import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
 import { StillAlive } from '../components/StillAlive'
 import { ZineReader } from '../components/ZineReader'
-import { cards } from '../lib/constants'
+import { getPublishedMemos } from '../lib/memos'
 import '../styles/home.css'
 import '../styles/animations.css'
 
+const memos = getPublishedMemos()
+type ThemePreference = 'system' | 'light' | 'dark'
+type ResolvedTheme = 'light' | 'dark'
+
+function getSystemTheme(): ResolvedTheme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 export function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
     const saved = localStorage.getItem('me-theme')
     if (saved === 'light' || saved === 'dark') return saved
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    return 'system'
   })
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme())
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
   const [isMemoInteracting, setIsMemoInteracting] = useState(false)
+  const resolvedTheme = themePreference === 'system' ? systemTheme : themePreference
 
   // PARALLAX EFFECT FOR DOT MATRIX
   const handlePointerMove = useCallback((e: React.PointerEvent | PointerEvent) => {
@@ -33,14 +43,22 @@ export function HomePage() {
     return () => window.removeEventListener('pointermove', handlePointerMove)
   }, [handlePointerMove])
 
-  // THEME SYNC & PERSISTENCE
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('me-theme', theme)
-  }, [theme])
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => setSystemTheme(media.matches ? 'dark' : 'light')
+
+    media.addEventListener('change', handleChange)
+    return () => media.removeEventListener('change', handleChange)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', resolvedTheme)
+  }, [resolvedTheme])
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+    const nextTheme = resolvedTheme === 'light' ? 'dark' : 'light'
+    localStorage.setItem('me-theme', nextTheme)
+    setThemePreference(nextTheme)
   }
 
   const isPushedBack = isMenuOpen || !!activeMemoId
@@ -50,7 +68,7 @@ export function HomePage() {
       <Header 
         isMenuOpen={isMenuOpen} 
         setIsMenuOpen={setIsMenuOpen} 
-        theme={theme}
+        theme={resolvedTheme}
         toggleTheme={toggleTheme}
         isReceded={isMemoInteracting}
       />
@@ -58,6 +76,7 @@ export function HomePage() {
       <div className={`main-content-container ${isPushedBack ? 'is-pushed-back' : ''}`}>
         <Hero activeSkillId={activeSkillId} setActiveSkillId={setActiveSkillId} />
         <StillAlive
+          memos={memos}
           onOpenMemo={(id) => setActiveMemoId(id)}
           onInteractionChange={setIsMemoInteracting}
         />
@@ -67,7 +86,7 @@ export function HomePage() {
         isOpen={!!activeMemoId} 
         onClose={() => setActiveMemoId(null)} 
         activeMemoId={activeMemoId}
-        memos={cards}
+        memos={memos}
       />
 
       <footer className={`page-footer ${activeSkillId || isPushedBack ? 'is-hidden' : ''}`}>
