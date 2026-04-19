@@ -632,8 +632,7 @@
   pointer-events: none;
 }
 
-/* PROGRESSIVE IMAGE STYLES */
-.progressive-image-wrap {
+.content-image {
   position: relative;
   width: 100%;
   height: 100%;
@@ -644,7 +643,7 @@
   isolation: isolate;
 }
 
-.progressive-image-wrap .main-img {
+.content-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -653,7 +652,7 @@
   transition: opacity var(--motion-sheet) ease, transform var(--motion-sheet) var(--ease-apple);
 }
 
-.progressive-image-wrap::after {
+.content-image::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -665,7 +664,7 @@
   z-index: 1;
 }
 
-.progressive-image-wrap .img-placeholder {
+.content-image-placeholder {
   position: absolute;
   inset: 0;
   background:
@@ -676,7 +675,7 @@
 }
 
 /* ==========================================================================
-   ZINE READER (THE ART PIECE)
+   ZINE READER
    ========================================================================== */
 .zine-reader {
   position: fixed;
@@ -856,26 +855,10 @@
 }
 
 .zine-image-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
   transform: scale(1.01);
 }
 
-.zine-image-item::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.10), transparent 28%),
-    radial-gradient(circle at 50% 100%, rgba(0, 0, 0, 0.10), transparent 64%);
-  mix-blend-mode: soft-light;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.skeleton-loader {
+.zine-image-item .content-image-placeholder {
   position: absolute;
   inset: 0;
   background:

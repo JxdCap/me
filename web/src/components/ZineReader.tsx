@@ -1,36 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import type { CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight } from 'lucide-react'
-import { type StillAliveCard, type StillAliveImage } from '../lib/constants'
+import { ContentImage } from './ContentImage'
+import { type StillAliveCard } from '../lib/constants'
 
 interface ZineReaderProps {
   isOpen: boolean
   onClose: () => void
   activeMemoId: string | null
   memos: StillAliveCard[]
-}
-
-function ZineImage({ image }: { image: StillAliveImage }) {
-  const [isLoaded, setIsLoaded] = useState(false)
-  
-  return (
-    <div
-      className={`zine-image-item ${isLoaded ? 'is-loaded' : ''}`}
-      style={{ '--image-tone': image.tone } as CSSProperties}
-    >
-      {!isLoaded && <div className="skeleton-loader" />}
-      <motion.img
-        src={image.src}
-        alt={image.alt}
-        loading="lazy"
-        onLoad={() => setIsLoaded(true)}
-        initial={{ opacity: 0 }}
-        animate={isLoaded ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      />
-    </div>
-  )
 }
 
 function formatEntryNumber(id: string) {
@@ -71,7 +49,6 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       setIsScrolled(false)
       setAreControlsReceded(false)
       lastScrollTopRef.current = 0
-      // Ensure we start from the top of the container
       if (containerRef.current) containerRef.current.scrollTop = 0
       closeButtonRef.current?.focus()
     } else {
@@ -92,7 +69,6 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
   if (!activeMemoId) return null
 
-  // Order: Clicked memo first, then others
   const startIndex = memos.findIndex(m => m.id === activeMemoId)
   const orderedMemos = [...memos.slice(startIndex), ...memos.slice(0, startIndex)]
 
@@ -131,7 +107,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                   {memo.images.length > 0 && (
                     <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
                       {memo.images.map((image, i) => (
-                        <ZineImage key={image.src} image={image} />
+                        <ContentImage key={image.src} image={image} className="zine-image-item" />
                       ))}
                     </div>
                   )}

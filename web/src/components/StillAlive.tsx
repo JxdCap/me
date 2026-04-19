@@ -5,36 +5,13 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { cards, type StillAliveImage } from '../lib/constants'
+import { ContentImage } from './ContentImage'
+import { cards } from '../lib/constants'
 
 const SECTION_TITLE = '正在录入 / LIVE'
 const THRESHOLD = -80
 const TAP_MAX_DISTANCE = 8
 const TAP_MAX_DURATION = 280
-
-function ProgressiveImage({ images }: { images: StillAliveImage[] }) {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const hasMultiple = images.length > 1
-  const firstImage = images[0]
-  if (!firstImage) return null
-
-  return (
-    <div
-      className={`progressive-image-wrap ${isLoaded ? 'is-loaded' : ''}`}
-      style={{ '--image-tone': firstImage.tone } as CSSProperties}
-    >
-      <img
-        src={firstImage.src}
-        alt={firstImage.alt}
-        loading="lazy"
-        onLoad={() => setIsLoaded(true)}
-        className="main-img"
-      />
-      {!isLoaded && <div className="img-placeholder" />}
-      {hasMultiple && <div className="photo-count-badge">+{images.length - 1}</div>}
-    </div>
-  )
-}
 
 interface StillAliveProps {
   onOpenMemo: (id: string) => void
@@ -68,11 +45,10 @@ export function StillAlive({ onOpenMemo, onInteractionChange }: StillAliveProps)
     if (!isDragging || swipeStartYRef.current === null) return
     const deltaY = e.clientY - swipeStartYRef.current
     
-    // Apple Tension Logic
+    // Nonlinear resistance keeps the drag controlled without feeling rigid.
     const currentDrag = deltaY > 0 ? Math.pow(deltaY, 0.65) : deltaY * 0.8
     setDragY(currentDrag)
 
-    // Calculate Velocity
     const now = Date.now()
     const dt = now - lastTimeRef.current
     if (dt > 0) {
@@ -92,7 +68,6 @@ export function StillAlive({ onOpenMemo, onInteractionChange }: StillAliveProps)
     const distance = Math.hypot(deltaX, deltaY)
     const duration = Date.now() - pointerDownTimeRef.current
     
-    // Velocity-aware Exit
     if (dragY < THRESHOLD || velocityRef.current < -1.5) {
       const topCard = cardsArray[0]
       setExitCardId(topCard.id)
@@ -212,7 +187,8 @@ export function StillAlive({ onOpenMemo, onInteractionChange }: StillAliveProps)
                 </div>
                 {card.images.length > 0 && (
                   <div className="ios-card-thumbnail">
-                    <ProgressiveImage images={card.images} />
+                    <ContentImage image={card.images[0]} />
+                    {card.images.length > 1 && <div className="photo-count-badge">+{card.images.length - 1}</div>}
                   </div>
                 )}
               </div>
