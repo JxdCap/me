@@ -44,7 +44,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 54px;
+  height: 56px;
   z-index: 150;
   flex-shrink: 0;
   animation: fade-in-down 0.8s ease forwards;
@@ -64,8 +64,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px;
-  border-radius: 22px;
+  padding: 5px;
+  border-radius: 999px;
   background: var(--material-control-glass);
   border: 1px solid var(--glass-edge);
   box-shadow: var(--control-shadow);
@@ -75,7 +75,7 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  min-height: 52px;
+  min-height: 56px;
   transition: transform var(--motion-control) var(--ease-apple),
               opacity var(--motion-control) ease,
               background var(--motion-control) ease,
@@ -84,18 +84,18 @@
 }
 
 .nav-cluster-left {
-  min-width: 104px;
+  min-width: 110px;
 }
 
 .nav-cluster-right {
-  min-width: 50px;
+  min-width: 54px;
   justify-content: center;
 }
 
 .nav-cluster-controls {
   gap: 0;
-  padding: 4px;
-  border-radius: 22px;
+  padding: 5px;
+  border-radius: 999px;
 }
 
 .ios-nav-container.is-menu-open .nav-cluster-left {
@@ -159,15 +159,15 @@
 }
 
 .nav-btn-circle {
-  width: 42px;
-  height: 42px;
-  border-radius: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
 }
 
 .nav-btn-segment {
   width: 44px;
   height: 44px;
-  border-radius: 18px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
@@ -183,8 +183,8 @@
 .nav-cluster-controls::after {
   content: '';
   position: absolute;
-  top: 11px;
-  bottom: 11px;
+  top: 12px;
+  bottom: 12px;
   left: 50%;
   width: 1px;
   background: color-mix(in srgb, var(--glass-edge) 58%, transparent);
