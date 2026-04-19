@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ArrowRight } from 'lucide-react'
+import { X } from 'lucide-react'
 import { ContentImage } from './ContentImage'
 import { type StillAliveCard } from '../lib/constants'
 import { getMemoEntryLabel, orderMemosForReader } from '../lib/memos'
@@ -16,6 +16,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const [scrollProgress, setScrollProgress] = useState(0)
   const [isScrolled, setIsScrolled] = useState(false)
   const [areControlsReceded, setAreControlsReceded] = useState(false)
+  const [currentMemoId, setCurrentMemoId] = useState<string | null>(activeMemoId)
   const containerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const lastScrollTopRef = useRef(0)
@@ -28,6 +29,17 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
     setScrollProgress(progress)
     setIsScrolled(container.scrollTop > 28)
+
+    const focusLine = container.scrollTop + 140
+    const articles = Array.from(container.querySelectorAll<HTMLElement>('[data-memo-id]'))
+    const currentArticle = articles.reduce<HTMLElement | null>((closest, article) => {
+      if (article.offsetTop > focusLine) return closest
+      if (!closest) return article
+      return article.offsetTop > closest.offsetTop ? article : closest
+    }, null)
+    const nextMemoId = currentArticle?.dataset.memoId
+    if (nextMemoId) setCurrentMemoId(nextMemoId)
+
     if (container.scrollTop < 28) {
       setAreControlsReceded(false)
     } else if (delta > 2) {
@@ -44,13 +56,14 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       setScrollProgress(0)
       setIsScrolled(false)
       setAreControlsReceded(false)
+      setCurrentMemoId(activeMemoId)
       lastScrollTopRef.current = 0
       if (containerRef.current) containerRef.current.scrollTop = 0
       closeButtonRef.current?.focus()
     } else {
       document.body.style.overflow = ''
     }
-  }, [isOpen])
+  }, [isOpen, activeMemoId])
 
   useEffect(() => {
     if (!isOpen) return
@@ -66,6 +79,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   if (!activeMemoId) return null
 
   const orderedMemos = orderMemosForReader(activeMemoId, memos)
+  const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
 
   return (
     <AnimatePresence>
@@ -77,47 +91,39 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
           exit={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
           transition={{ type: 'spring', damping: 30, stiffness: 200 }}
         >
-          {/* TOP PROGRESS BAR */}
-          <motion.div className="scroll-progress-bar" style={{ scaleX: scrollProgress }} />
-
-          {/* UNIFIED iOS CLOSE BUTTON */}
-          <div className="zine-fixed-controls">
-            <button ref={closeButtonRef} className="nav-btn-circle is-active" onClick={onClose} aria-label="关闭">
-              <X size={20} />
+          <div className="reader-bar">
+            <div className="reader-bar-copy" key={activeMemo?.id || 'reader'}>
+              <span className="reader-bar-label">{activeMemo ? `${activeMemo.location} · ${activeMemo.time}` : '阅读记录'}</span>
+              <span className="reader-bar-title">个人记录</span>
+            </div>
+            <button ref={closeButtonRef} className="reader-close-button" onClick={onClose} aria-label="关闭阅读器">
+              <X size={18} />
             </button>
+            <motion.div className="reader-progress-edge" style={{ scaleX: scrollProgress }} />
           </div>
 
           <div className="zine-scroll-container" onScroll={handleScroll} ref={containerRef}>
             {orderedMemos.map((memo, index) => (
-              <article key={memo.id} className="zine-article">
-                <header className="zine-article-header sticky-header">
-                  <div className="header-glass-bg" />
-                  <div className="header-content">
-                    <span className="zine-article-meta">{memo.location} · {memo.time}</span>
-                    <h1 className="zine-article-id">{getMemoEntryLabel(memo.id)}</h1>
-                  </div>
+              <article key={memo.id} className="zine-article" data-memo-id={memo.id}>
+                <header className="zine-entry-header">
+                  <span className="zine-entry-index">{getMemoEntryLabel(memo.id)}</span>
+                  <span className="zine-entry-meta">{memo.location} · {memo.time}</span>
                 </header>
-                
-                <div className="article-inner-content">
-                  {memo.images.length > 0 && (
-                    <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
-                      {memo.images.map((image, i) => (
-                        <ContentImage key={image.src} image={image} className="zine-image-item" />
-                      ))}
-                    </div>
-                  )}
 
-                  <div className="zine-article-body">
-                    <p>{memo.text}</p>
-                  </div>
+                <div className="zine-article-body">
+                  <p>{memo.text}</p>
                 </div>
 
-                {index < orderedMemos.length - 1 && (
-                  <div className="zine-article-divider">
-                    <div className="divider-line" />
-                    <span className="divider-text">下一则</span>
-                    <ArrowRight size={14} />
+                {memo.images.length > 0 && (
+                  <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
+                    {memo.images.map((image) => (
+                      <ContentImage key={image.src} image={image} className="zine-image-item" />
+                    ))}
                   </div>
+                )}
+
+                {index < orderedMemos.length - 1 && (
+                  <div className="zine-section-space" aria-hidden="true" />
                 )}
               </article>
             ))}
