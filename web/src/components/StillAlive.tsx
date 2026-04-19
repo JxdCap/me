@@ -25,7 +25,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
   { memos, onOpenMemo, onInteractionChange },
   ref
 ) {
-  const [cardsArray, setCardsArray] = useState(memos)
+  const [memoStack, setMemoStack] = useState(memos)
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [exitCardId, setExitCardId] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
   const velocityRef = useRef<number>(0)
 
   useEffect(() => {
-    setCardsArray(memos)
+    setMemoStack(memos)
   }, [memos])
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -79,11 +79,11 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
     const duration = Date.now() - pointerDownTimeRef.current
     
     if (dragY < THRESHOLD || velocityRef.current < -1.5) {
-      const topCard = cardsArray[0]
-      setExitCardId(topCard.id)
+      const topMemo = memoStack[0]
+      setExitCardId(topMemo.id)
       
       setTimeout(() => {
-        setCardsArray(prev => {
+        setMemoStack(prev => {
           const next = [...prev]
           const first = next.shift()!
           next.push(first)
@@ -95,7 +95,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
         onInteractionChange?.(false)
       }, 500)
     } else {
-      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) onOpenMemo(cardsArray[0].id)
+      if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) onOpenMemo(memoStack[0].id)
       setDragY(0)
     }
     swipeStartXRef.current = null
@@ -105,7 +105,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'Enter' && e.key !== ' ') return
     e.preventDefault()
-    onOpenMemo(cardsArray[0].id)
+    onOpenMemo(memoStack[0].id)
   }
 
   return (
@@ -142,8 +142,8 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
         }}
         onKeyDown={handleKeyDown}
       >
-        {cardsArray.map((card, index) => {
-          const isExiting = card.id === exitCardId
+        {memoStack.map((memo, index) => {
+          const isExiting = memo.id === exitCardId
           const isTop = index === 0 && !isExiting
           const slotIndex = exitCardId && !isExiting ? index - 1 : index
           
@@ -190,16 +190,16 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           } as any
 
           return (
-            <article key={card.id} className={`ios-card ${card.images.length === 0 ? 'has-no-image' : ''}`} style={style}>
+            <article key={memo.id} className={`ios-card ${memo.images.length === 0 ? 'has-no-image' : ''}`} style={style}>
               <div className="ios-card-content" style={{ transform: `translate3d(0, ${textParallax}px, 0)` }}>
                 <div className="ios-card-text-area">
-                  <p className="ios-card-time">{card.location} // {card.time}</p>
-                  <p className="ios-card-text">{card.text}</p>
+                  <p className="ios-card-time">{memo.location} // {memo.time}</p>
+                  <p className="ios-card-text">{memo.text}</p>
                 </div>
-                {card.images.length > 0 && (
+                {memo.images.length > 0 && (
                   <div className="ios-card-thumbnail">
-                    <ContentImage image={card.images[0]} />
-                    {card.images.length > 1 && <div className="photo-count-badge">+{card.images.length - 1}</div>}
+                    <ContentImage image={memo.images[0]} />
+                    {memo.images.length > 1 && <div className="photo-count-badge">+{memo.images.length - 1}</div>}
                   </div>
                 )}
               </div>
