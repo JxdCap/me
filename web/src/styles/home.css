@@ -1080,11 +1080,61 @@
   }
 
   .zine-article {
-    padding: 0 40px;
+    max-width: 880px;
+    padding: 0 56px;
+  }
+
+  .reader-bar {
+    top: 34px;
+    width: min(460px, calc(100% - 96px));
+    min-height: 52px;
+    padding: 5px 6px 5px 17px;
+  }
+
+  .reader-close-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .reader-progress-edge {
+    right: 52px;
+  }
+
+  .zine-reader.controls-receded .reader-bar {
+    width: 318px;
+    transform: translateX(-50%) translateY(-8px) scale(0.93);
+  }
+
+  .zine-scroll-container {
+    padding-top: 128px;
+  }
+
+  .zine-entry-header {
+    max-width: 560px;
+  }
+
+  .zine-article-body {
+    max-width: 560px;
+    font-size: 25px;
+    line-height: 1.48;
   }
 
   .zine-image-grid {
-    gap: 14px;
+    width: min(100%, 760px);
+    margin-top: 36px;
+    gap: 16px;
+  }
+
+  .images-1 {
+    width: min(100%, 820px);
+  }
+
+  .images-1 .zine-image-item {
+    aspect-ratio: 16/10;
+  }
+
+  .zine-section-space {
+    height: clamp(112px, 16vh, 176px);
   }
 }
 
