@@ -1,20 +1,27 @@
 :root {
-  --bg-base: #ffffff;
+  --bg-base: #fbfbfd;
   --bg-base-rgb: 255, 255, 255;
-  --bg-dot: rgba(0, 0, 0, 0.04);
-  --text-main: #111111;
-  --text-muted: #888888;
-  --text-dim: #aaaaaa;
-  --accent: #f43f5e;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(252, 252, 251, 0.96));
-  --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
-  --border-color: rgba(0, 0, 0, 0.05);
-  --pill-bg: #ffffff;
-  --pill-active-bg: #111111;
+  --bg-dot: rgba(0, 0, 0, 0.025);
+  --text-main: #111113;
+  --text-muted: #6e6e73;
+  --text-dim: #9b9ba1;
+  --accent: #007aff;
+  --surface-content: rgba(255, 255, 255, 0.92);
+  --surface-content-elevated: rgba(255, 255, 255, 0.98);
+  --material-control-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(246, 247, 249, 0.56));
+  --material-control-glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(245, 246, 248, 0.72));
+  --material-overlay-glass: rgba(246, 247, 250, 0.74);
+  --glass-edge: rgba(255, 255, 255, 0.72);
+  --glass-edge-dark: rgba(20, 20, 24, 0.08);
+  --card-bg: var(--surface-content-elevated);
+  --card-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+  --control-shadow: 0 14px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 var(--glass-edge);
+  --border-color: rgba(0, 0, 0, 0.08);
+  --pill-bg: var(--material-control-glass);
+  --pill-active-bg: rgba(17, 17, 19, 0.92);
   --pill-active-text: #ffffff;
   
-  font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
   color: var(--text-main);
   background: var(--bg-base);
   line-height: 1.5;
@@ -27,25 +34,31 @@
 }
 
 [data-theme='dark'] {
-  --bg-base: #0e0e11;
-  --bg-base-rgb: 14, 14, 17;
-  --bg-dot: rgba(255, 255, 255, 0.06);
-  --text-main: #ededed;
-  --text-muted: #a1a1aa;
-  --text-dim: #71717a;
-  --accent: #fb7185;
-  --glass-bg: rgba(14, 14, 17, 0.8);
-  --card-bg: linear-gradient(180deg, rgba(28, 28, 32, 0.98), rgba(22, 22, 25, 0.96));
-  --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --pill-bg: #1c1c21;
-  --pill-active-bg: #ededed;
+  --bg-base: #08090b;
+  --bg-base-rgb: 8, 9, 11;
+  --bg-dot: rgba(255, 255, 255, 0.035);
+  --text-main: #f5f5f7;
+  --text-muted: #a1a1a6;
+  --text-dim: #6e6e73;
+  --accent: #0a84ff;
+  --surface-content: rgba(28, 29, 33, 0.88);
+  --surface-content-elevated: rgba(31, 32, 36, 0.96);
+  --material-control-glass: linear-gradient(180deg, rgba(68, 70, 78, 0.58), rgba(35, 36, 41, 0.48));
+  --material-control-glass-strong: linear-gradient(180deg, rgba(80, 82, 90, 0.7), rgba(38, 39, 45, 0.62));
+  --material-overlay-glass: rgba(18, 19, 23, 0.72);
+  --glass-edge: rgba(255, 255, 255, 0.18);
+  --glass-edge-dark: rgba(0, 0, 0, 0.24);
+  --card-bg: var(--surface-content-elevated);
+  --card-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  --control-shadow: 0 16px 46px rgba(0, 0, 0, 0.42), inset 0 1px 0 var(--glass-edge);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --pill-bg: var(--material-control-glass);
+  --pill-active-bg: rgba(245, 245, 247, 0.92);
   --pill-active-text: #0e0e11;
 }
 
 * {
   box-sizing: border-box;
-  transition: border-color 0.5s ease, background-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease, filter 0.5s ease;
 }
 
 html,

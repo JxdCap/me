@@ -133,14 +133,14 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
           const isCapturing = isDragging && dragY < THRESHOLD
           const bloomScale = (isCapturing && slotIndex === 0 && !isTop) ? 1.02 : 1
 
-          const shadowBlur = isTop ? Math.max(40, 40 + Math.abs(dragY) * 0.2) : 20
-          const shadowOpacity = isTop ? Math.min(0.08, 0.08 - Math.abs(dragY) * 0.0002) : 0.04
-          const textParallax = isTop ? dragY * 0.05 : 0
+          const shadowBlur = isTop ? Math.max(34, 34 + Math.abs(dragY) * 0.12) : 18
+          const shadowOpacity = isTop ? Math.max(0.04, 0.08 - Math.abs(dragY) * 0.0002) : 0.04
+          const textParallax = isTop ? dragY * 0.025 : 0
 
-          const ty = slotIndex * 14
-          const tz = slotIndex * -25
-          const sc = 1 - slotIndex * 0.045
-          const bl = slotIndex * 0.5
+          const ty = slotIndex * 12
+          const tz = slotIndex * -18
+          const sc = 1 - slotIndex * 0.035
+          const bl = slotIndex * 0.35
 
           const style: CSSProperties = {
             zIndex: 100 - index,
@@ -152,10 +152,10 @@ export function StillAlive({ onOpenMemo }: StillAliveProps) {
             animation: `card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${0.4 + index * 0.1}s backwards`,
             
             transform: isTop 
-              ? `translate3d(0, ${dragY}px, 0) scale(1) rotate(${dragY * 0.015}deg)`
+              ? `translate3d(0, ${dragY}px, 0) scale(1)`
               : isExiting 
-                ? `translate3d(0, -250px, 100px) scale(1.1) rotateX(15deg) rotate(-8deg)`
-                : `translate3d(0, ${ty}px, ${tz}px) scale(${sc}) rotateX(${slotIndex * -2}deg)`,
+                ? `translate3d(0, -210px, 80px) scale(1.04)`
+                : `translate3d(0, ${ty}px, ${tz}px) scale(${sc})`,
             
             opacity: isExiting ? 0 : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.18,
             filter: `blur(${bl}px)`,

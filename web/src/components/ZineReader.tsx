@@ -31,18 +31,22 @@ function ZineImage({ src }: { src: string }) {
 
 export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderProps) {
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [isScrolled, setIsScrolled] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget
-    const progress = container.scrollTop / (container.scrollHeight - container.clientHeight)
+    const scrollableDistance = container.scrollHeight - container.clientHeight
+    const progress = scrollableDistance > 0 ? container.scrollTop / scrollableDistance : 0
     setScrollProgress(progress)
+    setIsScrolled(container.scrollTop > 28)
   }
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
       setScrollProgress(0)
+      setIsScrolled(false)
       // Ensure we start from the top of the container
       if (containerRef.current) containerRef.current.scrollTop = 0
     } else {
@@ -60,7 +64,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className="zine-reader"
+          className={`zine-reader ${isScrolled ? 'is-scrolled' : ''}`}
           initial={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
           animate={{ opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 0px)' }}
           exit={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
