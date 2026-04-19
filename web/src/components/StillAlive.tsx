@@ -120,7 +120,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           <h2 id="stillalive-title" className="typewriter">{SECTION_TITLE}</h2>
         </div>
         <span className="status-hint">
-          {dragY < THRESHOLD ? '松手切换' : '上滑看下一则'}
+          {dragY < THRESHOLD ? '松手进入下一则' : '继续上滑浏览'}
         </span>
       </div>
       
@@ -147,17 +147,17 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           const isTop = index === 0 && !isExiting
           const slotIndex = exitCardId && !isExiting ? index - 1 : index
           
-          const isCapturing = isDragging && dragY < THRESHOLD
-          const bloomScale = (isCapturing && slotIndex === 0 && !isTop) ? 1.02 : 1
+          const isHandingOff = isDragging && dragY < THRESHOLD
+          const handoffScale = (isHandingOff && slotIndex === 0 && !isTop) ? 1.012 : 1
 
-          const shadowBlur = isTop ? Math.max(34, 34 + Math.abs(dragY) * 0.12) : 18
-          const shadowOpacity = isTop ? Math.max(0.04, 0.08 - Math.abs(dragY) * 0.0002) : 0.04
-          const textParallax = isTop ? dragY * 0.025 : 0
+          const shadowBlur = isTop ? Math.max(30, 30 + Math.abs(dragY) * 0.08) : 14
+          const shadowOpacity = isTop ? Math.max(0.04, 0.07 - Math.abs(dragY) * 0.00018) : 0.028
+          const textParallax = isTop ? dragY * 0.018 : 0
 
-          const ty = slotIndex * 12
-          const tz = slotIndex * -18
-          const sc = 1 - slotIndex * 0.035
-          const bl = slotIndex * 0.35
+          const ty = slotIndex * 10
+          const tz = slotIndex * -10
+          const sc = 1 - slotIndex * 0.022
+          const bl = slotIndex * 0.22
 
           const style: CSSProperties = {
             zIndex: 100 - index,
@@ -169,12 +169,12 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
             animation: `card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${0.4 + index * 0.1}s backwards`,
             
             transform: isTop 
-              ? `translate3d(0, ${dragY}px, 0) scale(1)`
+              ? `translate3d(0, ${dragY}px, 0) scale(${Math.max(0.985, 1 - Math.abs(dragY) * 0.00012)})`
               : isExiting 
-                ? `translate3d(0, -210px, 80px) scale(1.04)`
+                ? `translate3d(0, -188px, 54px) scale(1.02)`
                 : `translate3d(0, ${ty}px, ${tz}px) scale(${sc})`,
             
-            opacity: isExiting ? 0 : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.18,
+            opacity: isExiting ? 0 : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.24,
             filter: `blur(${bl}px)`,
             boxShadow: `0 ${shadowBlur}px ${shadowBlur * 2}px rgba(0,0,0,${shadowOpacity})`,
             
@@ -185,7 +185,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
                  filter 500ms ease,
                  box-shadow 500ms ease`,
             
-            scale: bloomScale,
+            scale: handoffScale,
             pointerEvents: index === 0 ? 'auto' : 'none'
           } as any
 
