@@ -34,6 +34,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
   const swipeStartXRef = useRef<number | null>(null)
   const pointerDownTimeRef = useRef<number>(0)
   const lastTimeRef = useRef<number>(0)
+  const lastPointerYRef = useRef<number | null>(null)
   const velocityRef = useRef<number>(0)
 
   useEffect(() => {
@@ -45,8 +46,10 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
     e.currentTarget.setPointerCapture(e.pointerId)
     swipeStartXRef.current = e.clientX
     swipeStartYRef.current = e.clientY
+    lastPointerYRef.current = e.clientY
     pointerDownTimeRef.current = Date.now()
     lastTimeRef.current = pointerDownTimeRef.current
+    velocityRef.current = 0
     setIsDragging(true)
     onInteractionChange?.(true)
   }
@@ -61,10 +64,12 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
 
     const now = Date.now()
     const dt = now - lastTimeRef.current
-    if (dt > 0) {
-      velocityRef.current = (e.clientY - (swipeStartYRef.current + dragY)) / dt
+    const lastPointerY = lastPointerYRef.current
+    if (dt > 0 && lastPointerY !== null) {
+      velocityRef.current = (e.clientY - lastPointerY) / dt
     }
     lastTimeRef.current = now
+    lastPointerYRef.current = e.clientY
   }
 
   const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -92,14 +97,17 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
         setExitCardId(null)
         setDragY(0)
         velocityRef.current = 0
+        lastPointerYRef.current = null
         onInteractionChange?.(false)
       }, 500)
     } else {
       if (distance < TAP_MAX_DISTANCE && duration < TAP_MAX_DURATION) onOpenMemo(memoStack[0].id)
       setDragY(0)
+      velocityRef.current = 0
     }
     swipeStartXRef.current = null
     swipeStartYRef.current = null
+    lastPointerYRef.current = null
   }
 
   const handleKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -108,19 +116,24 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
     onOpenMemo(memoStack[0].id)
   }
 
+  const thresholdProgress = Math.min(Math.max((-dragY / Math.abs(THRESHOLD)) || 0, 0), 1.18)
+  const approachProgress = Math.min(thresholdProgress, 1)
+  const isNearAdvance = approachProgress >= 0.72 && approachProgress < 1
+  const isReadyToAdvance = thresholdProgress >= 1
+
   return (
     <section className="status-section" aria-labelledby="stillalive-title">
-      <div className="section-heading-compact" style={{ 
-        opacity: isDragging ? 0.3 : 1, 
-        filter: isDragging ? 'blur(2px)' : 'none',
-        transition: 'all 0.4s ease'
-      }}>
+      <div className={`section-heading-compact ${isNearAdvance ? 'is-near-advance' : ''} ${isReadyToAdvance ? 'is-ready-advance' : ''}`}>
         <div className="presence-indicator">
           <div className="live-dot" />
           <h2 id="stillalive-title" className="typewriter">{SECTION_TITLE}</h2>
         </div>
-        <span className="status-hint">
-          {dragY < THRESHOLD ? '松手进入下一则' : '继续上滑浏览'}
+        <span className="status-hint" aria-live="polite">
+          {isReadyToAdvance
+            ? '松手进入下一则'
+            : isNearAdvance
+              ? '即将进入下一则'
+              : '继续上滑浏览'}
         </span>
       </div>
       
@@ -130,6 +143,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
         role="button"
         tabIndex={0}
         aria-label="打开最新记录"
+        aria-describedby="stillalive-gesture-hint"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -137,44 +151,48 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           setIsDragging(false)
           onInteractionChange?.(false)
           setDragY(0)
+          velocityRef.current = 0
           swipeStartXRef.current = null
           swipeStartYRef.current = null
+          lastPointerYRef.current = null
         }}
         onKeyDown={handleKeyDown}
       >
+        <span id="stillalive-gesture-hint" className="visually-hidden">
+          点击打开当前记录，向上滑动浏览下一则。
+        </span>
         {memoStack.map((memo, index) => {
           const isExiting = memo.id === exitCardId
           const isTop = index === 0 && !isExiting
           const slotIndex = exitCardId && !isExiting ? index - 1 : index
           
-          const isHandingOff = isDragging && dragY < THRESHOLD
-          const handoffScale = (isHandingOff && slotIndex === 0 && !isTop) ? 1.012 : 1
+          const topProgress = isTop ? approachProgress : 0
+          const incomingProgress = !isTop && slotIndex === 0 ? approachProgress : 0
 
-          const shadowBlur = isTop ? Math.max(30, 30 + Math.abs(dragY) * 0.08) : 14
-          const shadowOpacity = isTop ? Math.max(0.04, 0.07 - Math.abs(dragY) * 0.00018) : 0.028
-          const textParallax = isTop ? dragY * 0.018 : 0
+          const shadowBlur = isTop ? Math.max(28, 28 + Math.abs(dragY) * 0.04) : slotIndex === 0 ? 24 : 14
+          const shadowOpacity = isTop ? Math.max(0.05, 0.075 - Math.abs(dragY) * 0.00012) : slotIndex === 0 ? 0.042 : 0.026
+          const textParallax = isTop ? dragY * 0.014 - topProgress * 4 : 0
 
-          const ty = slotIndex * 10
-          const tz = slotIndex * -10
-          const sc = 1 - slotIndex * 0.022
-          const bl = slotIndex * 0.22
+          const ty = slotIndex * 12 - incomingProgress * 12
+          const sc = 1 - slotIndex * 0.018 + incomingProgress * 0.012
+          const bl = slotIndex === 0 ? 0 : slotIndex === 1 ? 0.18 : 0.4
+          const showExcerpt = slotIndex <= 1
+          const showThumbnail = memo.images.length > 0 && slotIndex <= 1
+          const showMeta = slotIndex <= 2
 
           const style: CSSProperties = {
             zIndex: 100 - index,
             '--ty': `${ty}px`,
-            '--tz': `${tz}px`,
             '--sc': sc,
             '--bl': `${bl}px`,
             
-            animation: `card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${0.4 + index * 0.1}s backwards`,
-            
             transform: isTop 
-              ? `translate3d(0, ${dragY}px, 0) scale(${Math.max(0.985, 1 - Math.abs(dragY) * 0.00012)})`
+              ? `translate3d(0, ${dragY}px, 0) scale(${Math.max(0.985, 1 - Math.abs(dragY) * 0.0001 - topProgress * 0.008)})`
               : isExiting 
-                ? `translate3d(0, -188px, 54px) scale(1.02)`
-                : `translate3d(0, ${ty}px, ${tz}px) scale(${sc})`,
+                ? `translate3d(0, -168px, 0) scale(1.008)`
+                : `translate3d(0, ${ty}px, 0) scale(${sc})`,
             
-            opacity: isExiting ? 0 : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.24,
+            opacity: isExiting ? 0 : slotIndex >= 3 ? 0 : 1 - slotIndex * 0.22 + incomingProgress * 0.06,
             filter: `blur(${bl}px)`,
             boxShadow: `0 ${shadowBlur}px ${shadowBlur * 2}px rgba(0,0,0,${shadowOpacity})`,
             
@@ -185,18 +203,28 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
                  filter 500ms ease,
                  box-shadow 500ms ease`,
             
-            scale: handoffScale,
-            pointerEvents: index === 0 ? 'auto' : 'none'
+            pointerEvents: index === 0 ? 'auto' : 'none',
+            animation: `card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${0.4 + index * 0.1}s backwards`
           } as any
 
           return (
-            <article key={memo.id} className={`ios-card ${memo.images.length === 0 ? 'has-no-image' : ''}`} style={style}>
-              <div className="ios-card-content" style={{ transform: `translate3d(0, ${textParallax}px, 0)` }}>
+            <article
+              key={memo.id}
+              className={`ios-card ${memo.images.length === 0 ? 'has-no-image' : ''}`}
+              style={style}
+            >
+              <div
+                className={`ios-card-content ${slotIndex > 0 ? 'is-secondary' : ''}`}
+                style={{
+                  transform: `translate3d(0, ${textParallax}px, 0)`,
+                  opacity: isTop ? 1 - topProgress * 0.08 : 1,
+                }}
+              >
                 <div className="ios-card-text-area">
-                  <p className="ios-card-time">{memo.location} // {memo.time}</p>
-                  <p className="ios-card-text">{memo.text}</p>
+                  {showMeta && <p className="ios-card-time">{memo.location} // {memo.time}</p>}
+                  {showExcerpt && <p className="ios-card-text">{memo.text}</p>}
                 </div>
-                {memo.images.length > 0 && (
+                {showThumbnail && (
                   <div className="ios-card-thumbnail">
                     <ContentImage image={memo.images[0]} />
                     {memo.images.length > 1 && <div className="photo-count-badge">+{memo.images.length - 1}</div>}
