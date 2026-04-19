@@ -86,6 +86,9 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       {isOpen && (
         <motion.div 
           className={`zine-reader ${isScrolled ? 'is-scrolled' : ''} ${areControlsReceded ? 'controls-receded' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="阅读记录"
           initial={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
           animate={{ opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 0px)' }}
           exit={{ opacity: 0, clipPath: 'inset(10% 10% 10% 10% round 40px)' }}
@@ -108,9 +111,10 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 key={memo.id}
                 className={`zine-article ${memo.images.length === 0 ? 'has-no-media' : ''}`}
                 data-memo-id={memo.id}
+                aria-labelledby={`memo-title-${memo.id}`}
               >
                 <header className="zine-entry-header">
-                  <span className="zine-entry-index">{getMemoEntryLabel(memo.id)}</span>
+                  <span id={`memo-title-${memo.id}`} className="zine-entry-index">{getMemoEntryLabel(memo.id)}</span>
                   <span className="zine-entry-meta">{memo.location} · {memo.time}</span>
                 </header>
 

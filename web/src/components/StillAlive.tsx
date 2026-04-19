@@ -1,4 +1,5 @@
 import {
+  forwardRef,
   useEffect,
   useRef,
   useState,
@@ -20,7 +21,10 @@ interface StillAliveProps {
   onInteractionChange?: (isInteracting: boolean) => void
 }
 
-export function StillAlive({ memos, onOpenMemo, onInteractionChange }: StillAliveProps) {
+export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function StillAlive(
+  { memos, onOpenMemo, onInteractionChange },
+  ref
+) {
   const [cardsArray, setCardsArray] = useState(memos)
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -122,6 +126,7 @@ export function StillAlive({ memos, onOpenMemo, onInteractionChange }: StillAliv
       
       <div
         className="stacked-cards ios-style apple-momentum"
+        ref={ref}
         role="button"
         tabIndex={0}
         aria-label="打开最新记录"
@@ -204,4 +209,4 @@ export function StillAlive({ memos, onOpenMemo, onInteractionChange }: StillAliv
       </div>
     </section>
   )
-}
+})

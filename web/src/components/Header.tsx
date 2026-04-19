@@ -22,9 +22,17 @@ interface HeaderProps {
   theme: 'light' | 'dark'
   toggleTheme: () => void
   isReceded?: boolean
+  isHiddenFromAssistiveTech?: boolean
 }
 
-export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isReceded = false }: HeaderProps) {
+export function Header({
+  isMenuOpen,
+  setIsMenuOpen,
+  theme,
+  toggleTheme,
+  isReceded = false,
+  isHiddenFromAssistiveTech = false,
+}: HeaderProps) {
   const [time, setTime] = useState(new Date())
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstIndexLinkRef = useRef<HTMLAnchorElement>(null)
@@ -79,7 +87,10 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
 
   return (
     <>
-      <header className={`ios-nav-container ${isReceded && !isMenuOpen ? 'is-context-receded' : ''}`}>
+      <header
+        className={`ios-nav-container ${isReceded && !isMenuOpen ? 'is-context-receded' : ''}`}
+        aria-hidden={isHiddenFromAssistiveTech}
+      >
         {/* LEFT CLUSTER */}
         <div className="nav-cluster-left">
           <button 
@@ -123,6 +134,9 @@ export function Header({ isMenuOpen, setIsMenuOpen, theme, toggleTheme, isRecede
       <div
         id="site-index"
         className={`index-overlay ${isMenuOpen ? 'is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="站点导航"
         aria-hidden={!isMenuOpen}
         onMouseDown={(e) => {
           if (e.target === e.currentTarget) setIsMenuOpen(false)

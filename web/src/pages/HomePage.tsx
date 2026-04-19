@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
 import { StillAlive } from '../components/StillAlive'
@@ -26,6 +26,7 @@ export function HomePage() {
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
   const [isMemoInteracting, setIsMemoInteracting] = useState(false)
+  const stillAliveRef = useRef<HTMLDivElement>(null)
   const resolvedTheme = themePreference === 'system' ? systemTheme : themePreference
 
   // PARALLAX EFFECT FOR DOT MATRIX
@@ -62,6 +63,12 @@ export function HomePage() {
   }
 
   const isPushedBack = isMenuOpen || !!activeMemoId
+  const closeReader = () => {
+    setActiveMemoId(null)
+    window.requestAnimationFrame(() => {
+      stillAliveRef.current?.focus()
+    })
+  }
 
   return (
     <main className="page-shell">
@@ -71,11 +78,16 @@ export function HomePage() {
         theme={resolvedTheme}
         toggleTheme={toggleTheme}
         isReceded={isMemoInteracting}
+        isHiddenFromAssistiveTech={!!activeMemoId}
       />
       
-      <div className={`main-content-container ${isPushedBack ? 'is-pushed-back' : ''}`}>
+      <div
+        className={`main-content-container ${isPushedBack ? 'is-pushed-back' : ''}`}
+        aria-hidden={isPushedBack}
+      >
         <Hero activeSkillId={activeSkillId} setActiveSkillId={setActiveSkillId} />
         <StillAlive
+          ref={stillAliveRef}
           memos={memos}
           onOpenMemo={(id) => setActiveMemoId(id)}
           onInteractionChange={setIsMemoInteracting}
@@ -84,12 +96,15 @@ export function HomePage() {
 
       <ZineReader 
         isOpen={!!activeMemoId} 
-        onClose={() => setActiveMemoId(null)} 
+        onClose={closeReader} 
         activeMemoId={activeMemoId}
         memos={memos}
       />
 
-      <footer className={`page-footer ${activeSkillId || isPushedBack ? 'is-hidden' : ''}`}>
+      <footer
+        className={`page-footer ${activeSkillId || isPushedBack ? 'is-hidden' : ''}`}
+        aria-hidden={isPushedBack}
+      >
         一些做过的界面，和还在路上的记录。
       </footer>
     </main>
