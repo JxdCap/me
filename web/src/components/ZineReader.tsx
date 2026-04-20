@@ -17,6 +17,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const [areControlsReceded, setAreControlsReceded] = useState(false)
   const [currentMemoId, setCurrentMemoId] = useState<string | null>(activeMemoId)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [categoryStartMemoId, setCategoryStartMemoId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const lastScrollTopRef = useRef(0)
@@ -56,6 +57,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       setAreControlsReceded(false)
       setCurrentMemoId(activeMemoId)
       setActiveCategory(null)
+      setCategoryStartMemoId(null)
       lastScrollTopRef.current = 0
       if (containerRef.current) containerRef.current.scrollTop = 0
       closeButtonRef.current?.focus()
@@ -80,11 +82,9 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const filteredMemos = activeCategory
     ? memos.filter((memo) => memo.category === activeCategory)
     : memos
-  const filterSourceId =
-    activeCategory && currentMemoId && filteredMemos.some((memo) => memo.id === currentMemoId)
-      ? currentMemoId
-      : activeMemoId
-  const orderedMemos = orderMemosForReader(filterSourceId, filteredMemos)
+  const orderedMemos = activeCategory
+    ? orderMemosForReader(categoryStartMemoId || activeMemoId, filteredMemos)
+    : orderMemosForReader(activeMemoId, memos)
   const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
 
   return (
@@ -106,7 +106,15 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
               <button
                 type="button"
                 className={`reader-bar-title ${activeCategory ? 'is-filter-active' : ''}`}
-                onClick={() => setActiveCategory(null)}
+                onClick={() => {
+                  setActiveCategory(null)
+                  setCategoryStartMemoId(null)
+                  setCurrentMemoId(activeMemoId)
+                  setScrollProgress(0)
+                  setAreControlsReceded(false)
+                  lastScrollTopRef.current = 0
+                  if (containerRef.current) containerRef.current.scrollTop = 0
+                }}
                 aria-label={activeCategory ? '清除分类筛选' : '当前为全部记录'}
               >
                 {activeCategory || '个人记录'}
@@ -132,8 +140,14 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                       type="button"
                       className={`zine-entry-category ${activeCategory === memo.category ? 'is-active' : ''}`}
                       onClick={() => {
-                        setActiveCategory((current) => current === memo.category ? null : memo.category)
+                        const nextCategory = activeCategory === memo.category ? null : memo.category
+                        setActiveCategory(nextCategory)
+                        setCategoryStartMemoId(nextCategory ? memo.id : null)
                         setCurrentMemoId(memo.id)
+                        setScrollProgress(0)
+                        setAreControlsReceded(false)
+                        lastScrollTopRef.current = 0
+                        if (containerRef.current) containerRef.current.scrollTop = 0
                       }}
                       aria-pressed={activeCategory === memo.category}
                     >
