@@ -86,6 +86,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     ? orderMemosForReader(categoryStartMemoId || activeMemoId, filteredMemos)
     : orderMemosForReader(activeMemoId, memos)
   const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
+  const filteredCount = orderedMemos.length
 
   return (
     <AnimatePresence>
@@ -102,23 +103,34 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
         >
           <div className="reader-bar">
             <div className="reader-bar-copy" key={activeMemo?.id || 'reader'}>
-              <span className="reader-bar-label">{activeMemo ? `${activeMemo.location} · ${activeMemo.time}` : '阅读记录'}</span>
-              <button
-                type="button"
-                className={`reader-bar-title ${activeCategory ? 'is-filter-active' : ''}`}
-                onClick={() => {
-                  setActiveCategory(null)
-                  setCategoryStartMemoId(null)
-                  setCurrentMemoId(activeMemoId)
-                  setScrollProgress(0)
-                  setAreControlsReceded(false)
-                  lastScrollTopRef.current = 0
-                  if (containerRef.current) containerRef.current.scrollTop = 0
-                }}
-                aria-label={activeCategory ? '清除分类筛选' : '当前为全部记录'}
-              >
-                {activeCategory || '个人记录'}
-              </button>
+              <span className="reader-bar-label">
+                {activeMemo
+                  ? `${activeMemo.location} · ${activeMemo.time}${activeCategory ? ' · 已按分类筛选' : ''}`
+                  : '阅读记录'}
+              </span>
+              {activeCategory ? (
+                <div className="reader-filter-state">
+                  <span className="reader-bar-title is-filter-active">{activeCategory}</span>
+                  <button
+                    type="button"
+                    className="reader-filter-reset"
+                    onClick={() => {
+                      setActiveCategory(null)
+                      setCategoryStartMemoId(null)
+                      setCurrentMemoId(activeMemoId)
+                      setScrollProgress(0)
+                      setAreControlsReceded(false)
+                      lastScrollTopRef.current = 0
+                      if (containerRef.current) containerRef.current.scrollTop = 0
+                    }}
+                    aria-label="回到全部记录"
+                  >
+                    全部 · {filteredCount}
+                  </button>
+                </div>
+              ) : (
+                <span className="reader-bar-title">个人记录</span>
+              )}
             </div>
             <button ref={closeButtonRef} className="reader-close-button" onClick={onClose} aria-label="关闭阅读器">
               <X size={18} />

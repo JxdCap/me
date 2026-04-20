@@ -839,14 +839,30 @@
   cursor: default;
 }
 
+.reader-filter-state {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
 .reader-bar-title.is-filter-active {
+  color: var(--accent);
+}
+
+.reader-filter-reset {
+  all: unset;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 540;
   cursor: pointer;
 }
 
-.reader-bar-title.is-filter-active::after {
-  content: ' · 全部';
-  color: var(--text-muted);
-  font-weight: 520;
+.reader-filter-reset:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 8px;
 }
 
 .reader-close-button {
@@ -889,6 +905,10 @@
 }
 
 .zine-reader.controls-receded .reader-bar-title {
+  display: none;
+}
+
+.zine-reader.controls-receded .reader-filter-reset {
   display: none;
 }
 
@@ -948,6 +968,10 @@
 
 .zine-entry-category.is-active .zine-entry-category-label {
   color: var(--accent);
+}
+
+.zine-entry-category.is-active .zine-entry-category-id {
+  color: color-mix(in srgb, var(--accent) 42%, var(--text-muted));
 }
 
 .zine-entry-category:focus-visible {
