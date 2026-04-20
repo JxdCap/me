@@ -250,7 +250,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
             ))}
             
             <div className="zine-end-cap">
-              <p>已经到底了</p>
+              <p className="zine-end-cap-copy">这段记录先看到这里。</p>
               <button className="back-to-top" onClick={onClose}>回到首页</button>
             </div>
           </div>

@@ -1,5 +1,4 @@
-import { useState, type CSSProperties } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { type StillAliveImage } from '../lib/constants'
 
 interface ContentImageProps {
@@ -23,20 +22,21 @@ export function ContentImage({
         ? image.readerSrc || image.src
         : image.src
 
+  useEffect(() => {
+    setIsLoaded(false)
+  }, [imageSrc])
+
   return (
     <div
       className={`content-image ${isLoaded ? 'is-loaded' : ''} ${className || ''}`}
       style={{ '--image-tone': image.tone } as CSSProperties}
     >
       {showPlaceholder && !isLoaded && <div className="content-image-placeholder" />}
-      <motion.img
+      <img
         src={imageSrc}
         alt={image.alt}
         loading="lazy"
         onLoad={() => setIsLoaded(true)}
-        initial={{ opacity: 0 }}
-        animate={isLoaded ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.45, ease: 'easeOut' }}
       />
     </div>
   )

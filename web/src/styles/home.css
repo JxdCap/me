@@ -733,7 +733,12 @@
   object-fit: cover;
   display: block;
   transform: scale(1.01);
-  transition: opacity var(--motion-sheet) ease, transform var(--motion-sheet) var(--ease-apple);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.content-image.is-loaded img {
+  opacity: 1;
 }
 
 .content-image::after {
@@ -756,6 +761,12 @@
     color-mix(in srgb, var(--image-tone, #c7c7cc) 40%, var(--surface-content));
   background-size: 220% 100%;
   animation: shimmer 1.8s infinite;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.content-image.is-loaded .content-image-placeholder {
+  opacity: 0;
 }
 
 /* ==========================================================================
@@ -1320,14 +1331,25 @@
 
 .zine-end-cap {
   text-align: center;
-  padding: 84px 0 max(110px, calc(84px + env(safe-area-inset-bottom)));
+  padding: 108px 0 max(132px, calc(104px + env(safe-area-inset-bottom)));
   color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.zine-end-cap-copy {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  letter-spacing: 0;
 }
 
 .back-to-top {
   all: unset;
   cursor: pointer;
-  padding: 12px 36px;
+  padding: 11px 30px;
   border: 1px solid var(--glass-edge);
   background: var(--material-control-glass);
   box-shadow: var(--control-shadow);
