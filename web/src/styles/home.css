@@ -584,6 +584,10 @@
   cursor: grabbing;
 }
 
+.desktop-memo-stream {
+  display: none;
+}
+
 .ios-card {
   position: absolute;
   top: 0;
@@ -1371,42 +1375,186 @@
 /* ==========================================================================
    PC RESPONSIVE
    ========================================================================== */
-@media (min-width: 840px) {
+@media (min-width: 1080px) {
   .page-shell {
-    flex-direction: row;
-    align-items: flex-start;
-    padding: 14vh 9vw 0;
-    gap: 7vw;
+    width: min(100%, 1440px);
+    padding: clamp(132px, 15vh, 168px) clamp(44px, 6vw, 104px) 0;
+    background-size: 52px 52px;
   }
 
   .ios-nav-container {
     position: fixed;
     top: 38px;
-    left: 9vw;
-    right: 9vw;
+    left: max(calc((100vw - 1440px) / 2 + 104px), clamp(64px, 7vw, 104px));
+    right: max(calc((100vw - 1440px) / 2 + 104px), clamp(64px, 7vw, 104px));
+  }
+
+  .main-content-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(48px, 6vw, 112px);
+    width: 100%;
   }
 
   .hero {
-    flex: 1;
-    max-width: 640px;
+    flex: 1 1 460px;
+    max-width: 560px;
     height: auto;
+    justify-content: flex-start;
+    gap: 28px;
+    padding: 0 0 28px;
   }
 
   .hero-copy h1 {
-    font-size: clamp(34px, 4.2vw, 58px);
-    line-height: 1.08;
+    font-size: clamp(38px, 4vw, 56px);
+    line-height: 1.06;
+    max-width: 9.5em;
+  }
+
+  .hero-avatar-placeholder {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
   }
 
   .skill-tags {
     flex-wrap: nowrap;
-    gap: 14px;
+    gap: 10px;
+  }
+
+  .skill-tag {
+    min-height: 36px;
+    padding: 0 16px;
   }
 
   .status-section {
-    flex: 1;
-    max-width: 560px;
+    flex: 0 1 500px;
+    min-width: 420px;
+    max-width: 500px;
     height: auto;
     padding-top: 0;
+    background: transparent;
+  }
+
+  .status-section .section-heading-compact {
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+
+  .status-section .section-heading-compact h2 {
+    font-size: 17px;
+    font-weight: 640;
+    letter-spacing: 0;
+  }
+
+  .status-section .status-hint {
+    display: none;
+  }
+
+  .stacked-cards.ios-style {
+    display: none;
+  }
+
+  .desktop-memo-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: min(64vh, 536px);
+    overflow: visible;
+    background: transparent;
+  }
+
+  .desktop-memo-card {
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--surface-content-elevated) 88%, transparent);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.052);
+    overflow: hidden;
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    transition: transform var(--motion-control) var(--ease-apple),
+                box-shadow var(--motion-control) ease,
+                border-color var(--motion-control) ease,
+                background var(--motion-control) ease;
+  }
+
+  .desktop-memo-card:hover,
+  .desktop-memo-card:focus-within {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--border-color) 72%, var(--text-muted));
+    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.072);
+  }
+
+  .desktop-memo-card-button {
+    all: unset;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 116px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    cursor: pointer;
+  }
+
+  .desktop-memo-card.is-primary .desktop-memo-card-button {
+    min-height: 142px;
+    padding: 22px 24px;
+  }
+
+  .desktop-memo-copy {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .desktop-memo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 560;
+  }
+
+  .desktop-memo-meta span:first-child {
+    color: var(--text-main);
+    font-weight: 650;
+  }
+
+  .desktop-memo-text {
+    margin-top: 8px;
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.48;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .desktop-memo-card.is-primary .desktop-memo-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .desktop-memo-thumb {
+    width: 88px;
+    height: 116px;
+    border-radius: 18px;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    border: 1px solid var(--border-color);
+    background: var(--surface-content);
+  }
+
+  .desktop-memo-card:not(.is-primary) .desktop-memo-thumb {
+    width: 68px;
+    height: 88px;
+    border-radius: 15px;
   }
 
   .ios-card {
@@ -1418,6 +1566,32 @@
     height: 152px;
   }
 
+}
+
+.page-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 16px 0 8px;
+  flex-shrink: 0;
+  transition: all 0.4s var(--ease-apple);
+}
+
+.page-footer.is-hidden {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@media (min-width: 1080px) {
+  .page-footer {
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (min-width: 840px) {
   .zine-article {
     max-width: 880px;
     padding: 0 56px;
@@ -1478,29 +1652,6 @@
 
   .zine-section-space {
     height: clamp(112px, 16vh, 176px);
-  }
-}
-
-.page-footer {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-muted);
-  padding: 16px 0 8px;
-  flex-shrink: 0;
-  transition: all 0.4s var(--ease-apple);
-}
-
-.page-footer.is-hidden {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-@media (min-width: 840px) {
-  .page-footer {
-    position: absolute;
-    bottom: 32px;
-    left: 0;
-    right: 0;
   }
 }
 

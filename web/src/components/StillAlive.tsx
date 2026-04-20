@@ -256,6 +256,37 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           )
         })}
       </div>
+
+      <div className="desktop-memo-stream" aria-label="最近记录">
+        {memos.slice(0, 3).map((memo, index) => (
+          <article
+            key={memo.id}
+            className={`desktop-memo-card ${index === 0 ? 'is-primary' : ''}`}
+          >
+            <button
+              type="button"
+              className="desktop-memo-card-button"
+              onClick={() => onOpenMemo(memo.id)}
+              aria-label={`打开${memo.category}记录`}
+            >
+              <div className="desktop-memo-copy">
+                <p className="desktop-memo-meta">
+                  <span>{memo.category}</span>
+                  <span>{memo.location} // {memo.time}</span>
+                </p>
+                <p className="desktop-memo-text">{memo.text}</p>
+              </div>
+
+              {memo.images.length > 0 && (
+                <div className="desktop-memo-thumb">
+                  <ContentImage image={memo.images[0]} variant="card" />
+                  {memo.images.length > 1 && <div className="photo-count-badge">+{memo.images.length - 1}</div>}
+                </div>
+              )}
+            </button>
+          </article>
+        ))}
+      </div>
     </section>
   )
 })

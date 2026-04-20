@@ -14,6 +14,10 @@ function getSystemTheme(): ResolvedTheme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+function getDefaultSkillId(): string | null {
+  return window.matchMedia('(min-width: 1080px)').matches ? 'design' : null
+}
+
 export function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
@@ -22,7 +26,7 @@ export function HomePage() {
     return 'system'
   })
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme())
-  const [activeSkillId, setActiveSkillId] = useState<string | null>(null)
+  const [activeSkillId, setActiveSkillId] = useState<string | null>(() => getDefaultSkillId())
   const [activeMemoId, setActiveMemoId] = useState<string | null>(null)
   const [memos, setMemos] = useState(() => getPublishedMemos())
   const [isMemoInteracting, setIsMemoInteracting] = useState(false)
