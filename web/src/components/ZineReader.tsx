@@ -176,8 +176,16 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
                 {memo.images.length > 0 && (
                   <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
-                    {memo.images.map((image) => (
-                      <ContentImage key={image.src} image={image} variant="reader" className="zine-image-item" />
+                    {memo.images.map((image, imageIndex) => (
+                      <div
+                        key={image.src}
+                        className="zine-image-item zine-image-lightbox-ready"
+                        data-memo-id={memo.id}
+                        data-image-index={imageIndex}
+                        data-full-src={image.fullSrc || image.src}
+                      >
+                        <ContentImage image={image} variant="reader" />
+                      </div>
                     ))}
                   </div>
                 )}

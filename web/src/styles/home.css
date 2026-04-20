@@ -1020,6 +1020,10 @@
   isolation: isolate;
 }
 
+.zine-image-lightbox-ready {
+  position: relative;
+}
+
 .zine-image-item img {
   transform: scale(1.01);
 }

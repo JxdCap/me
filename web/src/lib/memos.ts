@@ -21,6 +21,7 @@ function normalizeImage(image: StillAliveImage, memo: StillAliveCard, index: num
     src: image.src,
     cardSrc: image.cardSrc || image.src,
     readerSrc: image.readerSrc || image.src,
+    fullSrc: image.fullSrc || image.src,
     alt: image.alt || `${memo.location}的记录图片 ${index + 1}`,
     tone: image.tone || FALLBACK_IMAGE_TONE,
   }
@@ -90,6 +91,7 @@ function buildMemoImages(record: PocketBaseMemoRecord): StillAliveImage[] {
     src: pb.files.getURL(record as never, file),
     cardSrc: pb.files.getURL(record as never, file, { thumb: CARD_IMAGE_THUMB }),
     readerSrc: pb.files.getURL(record as never, file, { thumb: READER_IMAGE_THUMB }),
+    fullSrc: pb.files.getURL(record as never, file),
     alt: `${record.location || '未命名地点'}的记录图片 ${index + 1}`,
     tone: FALLBACK_IMAGE_TONE,
   }))
