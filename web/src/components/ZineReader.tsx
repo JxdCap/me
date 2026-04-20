@@ -25,6 +25,17 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const lightboxCloseButtonRef = useRef<HTMLButtonElement>(null)
   const lastScrollTopRef = useRef(0)
 
+  const filteredMemos = activeCategory
+    ? memos.filter((memo) => memo.category === activeCategory)
+    : memos
+  const orderedMemos = activeCategory
+    ? orderMemosForReader(categoryStartMemoId || activeMemoId, filteredMemos)
+    : orderMemosForReader(activeMemoId, memos)
+  const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
+  const filteredCount = orderedMemos.length
+  const lightboxMemo = lightboxMemoId ? orderedMemos.find((memo) => memo.id === lightboxMemoId) || null : null
+  const lightboxMedia = lightboxMemo?.media[lightboxMediaIndex] || null
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget
     const scrollableDistance = container.scrollHeight - container.clientHeight
@@ -98,24 +109,13 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose, lightboxMemoId])
+  }, [isOpen, onClose, lightboxMemoId, lightboxMemo])
 
   useEffect(() => {
     if (lightboxMemoId) lightboxCloseButtonRef.current?.focus()
   }, [lightboxMemoId])
 
   if (!activeMemoId) return null
-
-  const filteredMemos = activeCategory
-    ? memos.filter((memo) => memo.category === activeCategory)
-    : memos
-  const orderedMemos = activeCategory
-    ? orderMemosForReader(categoryStartMemoId || activeMemoId, filteredMemos)
-    : orderMemosForReader(activeMemoId, memos)
-  const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
-  const filteredCount = orderedMemos.length
-  const lightboxMemo = lightboxMemoId ? orderedMemos.find((memo) => memo.id === lightboxMemoId) || null : null
-  const lightboxMedia = lightboxMemo?.media[lightboxMediaIndex] || null
 
   const openLightbox = (memoId: string, mediaIndex: number) => {
     setLightboxMemoId(memoId)
@@ -346,7 +346,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                     {lightboxMedia.type === 'video' ? (
                       <video
                         src={lightboxMedia.fullSrc || lightboxMedia.src}
-                        poster={lightboxMedia.posterSrc}
+                        poster={lightboxMedia.posterSrc || lightboxMedia.readerSrc}
                         className="reader-lightbox-image reader-lightbox-video"
                         controls
                         playsInline

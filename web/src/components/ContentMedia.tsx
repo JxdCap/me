@@ -23,13 +23,15 @@ export function ContentMedia({
       ? media.cardSrc || media.posterSrc || media.src
       : variant === 'reader'
         ? media.readerSrc || media.posterSrc || media.src
-        : media.src
+        : media.posterSrc || media.src
 
   useEffect(() => {
     setIsLoaded(false)
   }, [mediaSrc])
 
   const isVideo = media.type === 'video'
+  const hasPoster = Boolean(media.posterSrc)
+  const shouldRenderPosterPreview = isVideo && hasPoster && !controls
 
   return (
     <div
@@ -39,16 +41,26 @@ export function ContentMedia({
       {showPlaceholder && !isLoaded && <div className="content-image-placeholder" />}
       {isVideo ? (
         <>
-          <video
-            src={media.fullSrc || media.src}
-            poster={media.posterSrc}
-            controls={controls}
-            playsInline
-            preload="metadata"
-            onLoadedData={() => setIsLoaded(true)}
-            onLoadedMetadata={() => setIsLoaded(true)}
-            onError={() => setIsLoaded(true)}
-          />
+          {shouldRenderPosterPreview ? (
+            <img
+              src={mediaSrc}
+              alt={media.alt}
+              loading="lazy"
+              onLoad={() => setIsLoaded(true)}
+              onError={() => setIsLoaded(true)}
+            />
+          ) : (
+            <video
+              src={media.fullSrc || media.src}
+              poster={hasPoster ? mediaSrc : undefined}
+              controls={controls}
+              playsInline
+              preload="metadata"
+              onLoadedData={() => setIsLoaded(true)}
+              onLoadedMetadata={() => setIsLoaded(true)}
+              onError={() => setIsLoaded(true)}
+            />
+          )}
           {!controls && (
             <span className="content-video-badge" aria-hidden="true">
               <Play size={14} fill="currentColor" />

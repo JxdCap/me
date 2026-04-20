@@ -7,7 +7,7 @@ import {
 } from './constants'
 import { pb } from './pocketbase'
 
-const FALLBACK_IMAGE_TONE = '#c7c7cc'
+const FALLBACK_MEDIA_TONE = '#c7c7cc'
 const MEMOS_COLLECTION = 'memos'
 const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
 const CARD_IMAGE_THUMB = '228x304'
@@ -22,6 +22,7 @@ type PocketBaseMemoRecord = {
   category?: string
   location?: string
   media?: string[]
+  poster?: string
   created: string
 }
 
@@ -46,7 +47,7 @@ function normalizeMedia(media: StillAliveMedia, memo: StillAliveCard, index: num
     posterSrc: media.posterSrc,
     duration: media.duration,
     alt: media.alt || `${memo.location}的媒体 ${index + 1}`,
-    tone: media.tone || FALLBACK_IMAGE_TONE,
+    tone: media.tone || FALLBACK_MEDIA_TONE,
   }
 }
 
@@ -118,23 +119,32 @@ function formatMemoTime(createdAt: string): string {
 
 function buildMemoMedia(record: PocketBaseMemoRecord): StillAliveMedia[] {
   const files = Array.isArray(record.media) ? record.media.filter(Boolean) : []
+  const posterUrl = record.poster ? pb.files.getURL(record as never, record.poster) : undefined
+  const cardPosterUrl = record.poster
+    ? pb.files.getURL(record as never, record.poster, { thumb: CARD_IMAGE_THUMB })
+    : undefined
+  const readerPosterUrl = record.poster
+    ? pb.files.getURL(record as never, record.poster, { thumb: READER_IMAGE_THUMB })
+    : undefined
 
   return files.map((file, index) => {
     const type = getMediaType(file)
     const fileUrl = pb.files.getURL(record as never, file)
+    const videoPosterSrc = type === 'video' ? posterUrl : undefined
 
     return {
       type,
       src: fileUrl,
       cardSrc: type === 'image'
         ? pb.files.getURL(record as never, file, { thumb: CARD_IMAGE_THUMB })
-        : fileUrl,
+        : cardPosterUrl || fileUrl,
       readerSrc: type === 'image'
         ? pb.files.getURL(record as never, file, { thumb: READER_IMAGE_THUMB })
-        : fileUrl,
+        : readerPosterUrl || fileUrl,
       fullSrc: fileUrl,
+      posterSrc: videoPosterSrc,
       alt: `${record.location || '未命名地点'}的媒体 ${index + 1}`,
-      tone: FALLBACK_IMAGE_TONE,
+      tone: FALLBACK_MEDIA_TONE,
     }
   })
 }
