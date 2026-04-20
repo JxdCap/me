@@ -93,7 +93,7 @@ export function Header({
             aria-expanded={isMenuOpen}
             aria-controls="site-index"
           >
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
           
           <button 
@@ -102,16 +102,16 @@ export function Header({
             aria-label="切换主题"
           >
             {theme === 'light' ? (
-              <Moon size={18} />
+              <Moon size={21} />
             ) : (
-              <Sun size={18} />
+              <Sun size={21} />
             )}
           </button>
         </div>
 
         <div className="nav-cluster nav-cluster-right">
           <button className="nav-btn-circle nav-btn-utility" aria-label="个人中心">
-            <User size={20} />
+            <User size={21} />
           </button>
         </div>
       </header>
