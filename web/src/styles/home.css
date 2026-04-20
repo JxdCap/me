@@ -635,6 +635,19 @@
   color: var(--text-muted);
   font-weight: 560;
   line-height: 1.2;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ios-card-category {
+  color: var(--text-main);
+  font-weight: 620;
+}
+
+.ios-card-time-separator {
+  color: var(--text-muted);
 }
 
 .ios-card-text {
@@ -651,6 +664,10 @@
 .ios-card-content.is-secondary .ios-card-time {
   font-size: 11px;
   opacity: 0.86;
+}
+
+.ios-card-content.is-secondary .ios-card-category {
+  color: color-mix(in srgb, var(--text-main) 88%, var(--text-muted));
 }
 
 .ios-card-content.is-secondary .ios-card-text {
@@ -814,10 +831,22 @@
 }
 
 .reader-bar-title {
+  all: unset;
   font-size: 15px;
   line-height: 1.2;
   font-weight: 650;
   color: var(--text-main);
+  cursor: default;
+}
+
+.reader-bar-title.is-filter-active {
+  cursor: pointer;
+}
+
+.reader-bar-title.is-filter-active::after {
+  content: ' · 全部';
+  color: var(--text-muted);
+  font-weight: 520;
 }
 
 .reader-close-button {
@@ -896,6 +925,35 @@
 .zine-entry-index {
   font-weight: 640;
   color: var(--text-main);
+}
+
+.zine-entry-category {
+  all: unset;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.zine-entry-category-label {
+  color: var(--text-main);
+  font-weight: 640;
+}
+
+.zine-entry-category-id {
+  color: var(--text-muted);
+  font-weight: 520;
+  letter-spacing: 0.02em;
+}
+
+.zine-entry-category.is-active .zine-entry-category-label {
+  color: var(--accent);
+}
+
+.zine-entry-category:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .zine-entry-meta {

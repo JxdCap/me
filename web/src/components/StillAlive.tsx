@@ -237,7 +237,12 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
                 }}
               >
                 <div className="ios-card-text-area">
-                  {showMeta && <p className="ios-card-time">{memo.location} // {memo.time}</p>}
+                  {showMeta && (
+                    <p className="ios-card-time">
+                      <span className="ios-card-category">{memo.category}</span>
+                      <span className="ios-card-time-separator">{memo.location} // {memo.time}</span>
+                    </p>
+                  )}
                   {showExcerpt && <p className="ios-card-text">{memo.text}</p>}
                 </div>
                 {showThumbnail && (

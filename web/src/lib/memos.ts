@@ -8,6 +8,7 @@ const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
 type PocketBaseMemoRecord = {
   id: string
   text?: string
+  category?: string
   location?: string
   images?: string[]
   created: string
@@ -91,6 +92,7 @@ function buildMemoImages(record: PocketBaseMemoRecord): StillAliveImage[] {
 function mapPocketBaseMemo(record: PocketBaseMemoRecord): StillAliveCard {
   return normalizeMemo({
     id: record.id,
+    category: record.category || '记录',
     text: record.text || '',
     location: record.location || '未标注',
     time: formatMemoTime(record.created),
@@ -122,7 +124,6 @@ export function orderMemosForReader(activeMemoId: string | null, memos: StillAli
   return [...memos.slice(startIndex), ...memos.slice(0, startIndex)]
 }
 
-export function getMemoEntryLabel(id: string): string {
-  const number = id.split('-')[1] || id
-  return `记录 ${number.padStart(2, '0')}`
+export function getMemoEntryLabel(category: string, id: string): string {
+  return `${category} ${id}`
 }

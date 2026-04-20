@@ -6,6 +6,7 @@ export type StillAliveImage = {
 
 export type StillAliveCard = {
   id: string
+  category: string
   time: string
   location: string
   text: string
@@ -15,6 +16,7 @@ export type StillAliveCard = {
 export const fallbackCards: StillAliveCard[] = [
   {
     id: 'stillalive-1',
+    category: '记录',
     time: '24H内',
     location: '杭州',
     text: '最近还没来得及整理成完整段落，但这些零碎现场已经足够说明，我这阵子一直在路上。',
@@ -26,6 +28,7 @@ export const fallbackCards: StillAliveCard[] = [
   },
   {
     id: 'stillalive-2',
+    category: '见闻',
     time: '12天前',
     location: '上海',
     text: '把最近路上的几个小片段收在一起，像给这段时间留一个轻一点的记号。',
@@ -36,6 +39,7 @@ export const fallbackCards: StillAliveCard[] = [
   },
   {
     id: 'stillalive-3',
+    category: '风景',
     time: '2026.04.10',
     location: '武汉',
     text: '有些东西先不急着讲完整，先让它们留在这里，等以后回头再慢慢辨认。',
@@ -45,6 +49,7 @@ export const fallbackCards: StillAliveCard[] = [
   },
   {
     id: 'stillalive-4',
+    category: '折腾',
     time: '2026.03.15',
     location: '苏州',
     text: '一些过去的痕迹，埋在深处。一切都在变，但我还在。',

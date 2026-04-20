@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { ContentImage } from './ContentImage'
 import { type StillAliveCard } from '../lib/constants'
-import { getMemoEntryLabel, orderMemosForReader } from '../lib/memos'
+import { orderMemosForReader } from '../lib/memos'
 
 interface ZineReaderProps {
   isOpen: boolean
@@ -16,6 +16,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const [scrollProgress, setScrollProgress] = useState(0)
   const [areControlsReceded, setAreControlsReceded] = useState(false)
   const [currentMemoId, setCurrentMemoId] = useState<string | null>(activeMemoId)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const lastScrollTopRef = useRef(0)
@@ -54,6 +55,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       setScrollProgress(0)
       setAreControlsReceded(false)
       setCurrentMemoId(activeMemoId)
+      setActiveCategory(null)
       lastScrollTopRef.current = 0
       if (containerRef.current) containerRef.current.scrollTop = 0
       closeButtonRef.current?.focus()
@@ -75,7 +77,14 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
   if (!activeMemoId) return null
 
-  const orderedMemos = orderMemosForReader(activeMemoId, memos)
+  const filteredMemos = activeCategory
+    ? memos.filter((memo) => memo.category === activeCategory)
+    : memos
+  const filterSourceId =
+    activeCategory && currentMemoId && filteredMemos.some((memo) => memo.id === currentMemoId)
+      ? currentMemoId
+      : activeMemoId
+  const orderedMemos = orderMemosForReader(filterSourceId, filteredMemos)
   const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
 
   return (
@@ -94,7 +103,14 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
           <div className="reader-bar">
             <div className="reader-bar-copy" key={activeMemo?.id || 'reader'}>
               <span className="reader-bar-label">{activeMemo ? `${activeMemo.location} · ${activeMemo.time}` : '阅读记录'}</span>
-              <span className="reader-bar-title">个人记录</span>
+              <button
+                type="button"
+                className={`reader-bar-title ${activeCategory ? 'is-filter-active' : ''}`}
+                onClick={() => setActiveCategory(null)}
+                aria-label={activeCategory ? '清除分类筛选' : '当前为全部记录'}
+              >
+                {activeCategory || '个人记录'}
+              </button>
             </div>
             <button ref={closeButtonRef} className="reader-close-button" onClick={onClose} aria-label="关闭阅读器">
               <X size={18} />
@@ -111,7 +127,20 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 aria-labelledby={`memo-title-${memo.id}`}
               >
                 <header className="zine-entry-header">
-                  <span id={`memo-title-${memo.id}`} className="zine-entry-index">{getMemoEntryLabel(memo.id)}</span>
+                  <span id={`memo-title-${memo.id}`} className="zine-entry-index">
+                    <button
+                      type="button"
+                      className={`zine-entry-category ${activeCategory === memo.category ? 'is-active' : ''}`}
+                      onClick={() => {
+                        setActiveCategory((current) => current === memo.category ? null : memo.category)
+                        setCurrentMemoId(memo.id)
+                      }}
+                      aria-pressed={activeCategory === memo.category}
+                    >
+                      <span className="zine-entry-category-label">{memo.category}</span>
+                      <span className="zine-entry-category-id">{memo.id}</span>
+                    </button>
+                  </span>
                   <span className="zine-entry-meta">{memo.location} · {memo.time}</span>
                 </header>
 
