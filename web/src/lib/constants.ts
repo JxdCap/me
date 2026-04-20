@@ -1,4 +1,4 @@
-export const MEMO_CATEGORIES = ['记录', '折腾', '见闻', '风景'] as const
+export const MEMO_CATEGORIES = ['风景', '碎语', '吐槽', '分享'] as const
 export type MemoCategory = (typeof MEMO_CATEGORIES)[number]
 
 export type StillAliveImage = {
@@ -22,7 +22,7 @@ export type StillAliveCard = {
 export const fallbackCards: StillAliveCard[] = [
   {
     id: 'stillalive-1',
-    category: '记录',
+    category: '碎语',
     time: '24H内',
     location: '杭州',
     text: '最近还没来得及整理成完整段落，但这些零碎现场已经足够说明，我这阵子一直在路上。',
@@ -34,7 +34,7 @@ export const fallbackCards: StillAliveCard[] = [
   },
   {
     id: 'stillalive-2',
-    category: '见闻',
+    category: '分享',
     time: '12天前',
     location: '上海',
     text: '把最近路上的几个小片段收在一起，像给这段时间留一个轻一点的记号。',
@@ -55,7 +55,7 @@ export const fallbackCards: StillAliveCard[] = [
   },
   {
     id: 'stillalive-4',
-    category: '折腾',
+    category: '吐槽',
     time: '2026.03.15',
     location: '苏州',
     text: '一些过去的痕迹，埋在深处。一切都在变，但我还在。',

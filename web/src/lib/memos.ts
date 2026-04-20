@@ -12,7 +12,7 @@ const MEMOS_COLLECTION = 'memos'
 const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
 const CARD_IMAGE_THUMB = '228x304'
 const READER_IMAGE_THUMB = '800x600f'
-const DEFAULT_MEMO_CATEGORY: MemoCategory = '记录'
+const DEFAULT_MEMO_CATEGORY: MemoCategory = '碎语'
 
 type PocketBaseMemoRecord = {
   id: string
