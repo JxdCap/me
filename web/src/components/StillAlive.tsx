@@ -247,7 +247,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
                 </div>
                 {showThumbnail && (
                   <div className="ios-card-thumbnail">
-                    <ContentImage image={memo.images[0]} />
+                    <ContentImage image={memo.images[0]} variant="card" />
                     {memo.images.length > 1 && <div className="photo-count-badge">+{memo.images.length - 1}</div>}
                   </div>
                 )}

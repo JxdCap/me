@@ -177,7 +177,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 {memo.images.length > 0 && (
                   <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
                     {memo.images.map((image) => (
-                      <ContentImage key={image.src} image={image} className="zine-image-item" />
+                      <ContentImage key={image.src} image={image} variant="reader" className="zine-image-item" />
                     ))}
                   </div>
                 )}

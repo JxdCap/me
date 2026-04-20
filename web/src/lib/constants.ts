@@ -1,5 +1,7 @@
 export type StillAliveImage = {
   src: string
+  cardSrc?: string
+  readerSrc?: string
   alt: string
   tone: string
 }

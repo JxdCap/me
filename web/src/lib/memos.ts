@@ -4,6 +4,8 @@ import { pb } from './pocketbase'
 const FALLBACK_IMAGE_TONE = '#c7c7cc'
 const MEMOS_COLLECTION = 'memos'
 const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
+const CARD_IMAGE_THUMB = '228x304'
+const READER_IMAGE_THUMB = '800x600f'
 
 type PocketBaseMemoRecord = {
   id: string
@@ -17,6 +19,8 @@ type PocketBaseMemoRecord = {
 function normalizeImage(image: StillAliveImage, memo: StillAliveCard, index: number): StillAliveImage {
   return {
     src: image.src,
+    cardSrc: image.cardSrc || image.src,
+    readerSrc: image.readerSrc || image.src,
     alt: image.alt || `${memo.location}的记录图片 ${index + 1}`,
     tone: image.tone || FALLBACK_IMAGE_TONE,
   }
@@ -84,6 +88,8 @@ function buildMemoImages(record: PocketBaseMemoRecord): StillAliveImage[] {
 
   return files.map((file, index) => ({
     src: pb.files.getURL(record as never, file),
+    cardSrc: pb.files.getURL(record as never, file, { thumb: CARD_IMAGE_THUMB }),
+    readerSrc: pb.files.getURL(record as never, file, { thumb: READER_IMAGE_THUMB }),
     alt: `${record.location || '未命名地点'}的记录图片 ${index + 1}`,
     tone: FALLBACK_IMAGE_TONE,
   }))
