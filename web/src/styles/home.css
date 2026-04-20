@@ -731,7 +731,8 @@
   isolation: isolate;
 }
 
-.content-image img {
+.content-image img,
+.content-image video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -741,8 +742,13 @@
   transition: opacity 220ms ease;
 }
 
-.content-image.is-loaded img {
+.content-image.is-loaded img,
+.content-image.is-loaded video {
   opacity: 1;
+}
+
+.content-image video {
+  background: #000;
 }
 
 .content-image::after {
@@ -771,6 +777,39 @@
 
 .content-image.is-loaded .content-image-placeholder {
   opacity: 0;
+}
+
+.content-video-badge,
+.content-video-duration {
+  position: absolute;
+  z-index: 2;
+  color: white;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+.content-video-badge {
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.content-video-duration {
+  right: 7px;
+  bottom: 7px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 650;
 }
 
 /* ==========================================================================
@@ -1047,8 +1086,46 @@
   background: transparent;
 }
 
-.zine-image-item img {
+.zine-image-item img,
+.zine-image-item video {
   transform: scale(1.01);
+}
+
+.zine-video-item {
+  cursor: default;
+}
+
+.zine-video-item .content-image {
+  position: absolute;
+  inset: 0;
+}
+
+.zine-video-item video {
+  cursor: auto;
+}
+
+.zine-media-expand {
+  all: unset;
+  position: absolute;
+  right: 9px;
+  top: 9px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  cursor: pointer;
+}
+
+.zine-media-expand:active {
+  transform: scale(0.94);
 }
 
 .zine-image-item .content-image-placeholder {
@@ -1205,6 +1282,10 @@
   object-fit: contain;
   border-radius: 20px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+}
+
+.reader-lightbox-video {
+  background: #000;
 }
 
 .reader-lightbox-nav {

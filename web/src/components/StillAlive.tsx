@@ -7,7 +7,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { ContentImage } from './ContentImage'
+import { ContentMedia } from './ContentMedia'
 import { type StillAliveCard } from '../lib/constants'
 
 const SECTION_TITLE = '正在录入 / LIVE'
@@ -184,7 +184,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           const sc = 1 - slotIndex * 0.018 + incomingProgress * 0.012
           const bl = slotIndex === 0 ? 0 : slotIndex === 1 ? 0.18 : 0.4
           const showExcerpt = slotIndex <= 1
-          const showThumbnail = memo.images.length > 0 && slotIndex <= 1
+          const showThumbnail = memo.media.length > 0 && slotIndex <= 1
           const showMeta = slotIndex <= 2
 
           const style: CSSProperties = {
@@ -217,7 +217,7 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
           return (
             <article
               key={memo.id}
-              className={`ios-card ${memo.images.length === 0 ? 'has-no-image' : ''}`}
+              className={`ios-card ${memo.media.length === 0 ? 'has-no-image' : ''}`}
               style={style}
               onTransitionEnd={(event) => {
                 if (
@@ -247,8 +247,8 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
                 </div>
                 {showThumbnail && (
                   <div className="ios-card-thumbnail">
-                    <ContentImage image={memo.images[0]} variant="card" />
-                    {memo.images.length > 1 && <div className="photo-count-badge">+{memo.images.length - 1}</div>}
+                    <ContentMedia media={memo.media[0]} variant="card" />
+                    {memo.media.length > 1 && <div className="photo-count-badge">+{memo.media.length - 1}</div>}
                   </div>
                 )}
               </div>
@@ -277,10 +277,10 @@ export const StillAlive = forwardRef<HTMLDivElement, StillAliveProps>(function S
                 <p className="desktop-memo-text">{memo.text}</p>
               </div>
 
-              {memo.images.length > 0 && (
+              {memo.media.length > 0 && (
                 <div className="desktop-memo-thumb">
-                  <ContentImage image={memo.images[0]} variant="card" />
-                  {memo.images.length > 1 && <div className="photo-count-badge">+{memo.images.length - 1}</div>}
+                  <ContentMedia media={memo.media[0]} variant="card" />
+                  {memo.media.length > 1 && <div className="photo-count-badge">+{memo.media.length - 1}</div>}
                 </div>
               )}
             </button>

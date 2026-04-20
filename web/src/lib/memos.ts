@@ -3,7 +3,7 @@ import {
   MEMO_CATEGORIES,
   type MemoCategory,
   type StillAliveCard,
-  type StillAliveImage,
+  type StillAliveMedia,
 } from './constants'
 import { pb } from './pocketbase'
 
@@ -13,24 +13,40 @@ const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
 const CARD_IMAGE_THUMB = '228x304'
 const READER_IMAGE_THUMB = '800x600f'
 const DEFAULT_MEMO_CATEGORY: MemoCategory = '碎语'
+const VIDEO_FILE_EXTENSIONS = new Set(['mp4', 'mov', 'm4v', 'webm'])
+const IMAGE_FILE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'heic', 'svg'])
 
 type PocketBaseMemoRecord = {
   id: string
   text?: string
   category?: string
   location?: string
-  images?: string[]
+  media?: string[]
   created: string
 }
 
-function normalizeImage(image: StillAliveImage, memo: StillAliveCard, index: number): StillAliveImage {
+function getFileExtension(fileName: string): string {
+  return fileName.split('.').pop()?.toLowerCase() || ''
+}
+
+function getMediaType(fileName: string): StillAliveMedia['type'] {
+  const extension = getFileExtension(fileName)
+  if (VIDEO_FILE_EXTENSIONS.has(extension)) return 'video'
+  if (IMAGE_FILE_EXTENSIONS.has(extension)) return 'image'
+  return 'image'
+}
+
+function normalizeMedia(media: StillAliveMedia, memo: StillAliveCard, index: number): StillAliveMedia {
   return {
-    src: image.src,
-    cardSrc: image.cardSrc || image.src,
-    readerSrc: image.readerSrc || image.src,
-    fullSrc: image.fullSrc || image.src,
-    alt: image.alt || `${memo.location}的记录图片 ${index + 1}`,
-    tone: image.tone || FALLBACK_IMAGE_TONE,
+    type: media.type === 'video' ? 'video' : 'image',
+    src: media.src,
+    cardSrc: media.cardSrc || media.posterSrc || media.src,
+    readerSrc: media.readerSrc || media.posterSrc || media.src,
+    fullSrc: media.fullSrc || media.src,
+    posterSrc: media.posterSrc,
+    duration: media.duration,
+    alt: media.alt || `${memo.location}的媒体 ${index + 1}`,
+    tone: media.tone || FALLBACK_IMAGE_TONE,
   }
 }
 
@@ -42,9 +58,11 @@ export function normalizeMemoCategory(category?: string | null): MemoCategory {
 }
 
 export function normalizeMemo(memo: StillAliveCard): StillAliveCard {
+  const media = Array.isArray(memo.media) ? memo.media : []
+
   return {
     ...memo,
-    images: memo.images.map((image, index) => normalizeImage(image, memo, index)),
+    media: media.map((item, index) => normalizeMedia(item, memo, index)),
   }
 }
 
@@ -98,17 +116,27 @@ function formatMemoTime(createdAt: string): string {
   return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
-function buildMemoImages(record: PocketBaseMemoRecord): StillAliveImage[] {
-  const files = record.images || []
+function buildMemoMedia(record: PocketBaseMemoRecord): StillAliveMedia[] {
+  const files = Array.isArray(record.media) ? record.media.filter(Boolean) : []
 
-  return files.map((file, index) => ({
-    src: pb.files.getURL(record as never, file),
-    cardSrc: pb.files.getURL(record as never, file, { thumb: CARD_IMAGE_THUMB }),
-    readerSrc: pb.files.getURL(record as never, file, { thumb: READER_IMAGE_THUMB }),
-    fullSrc: pb.files.getURL(record as never, file),
-    alt: `${record.location || '未命名地点'}的记录图片 ${index + 1}`,
-    tone: FALLBACK_IMAGE_TONE,
-  }))
+  return files.map((file, index) => {
+    const type = getMediaType(file)
+    const fileUrl = pb.files.getURL(record as never, file)
+
+    return {
+      type,
+      src: fileUrl,
+      cardSrc: type === 'image'
+        ? pb.files.getURL(record as never, file, { thumb: CARD_IMAGE_THUMB })
+        : fileUrl,
+      readerSrc: type === 'image'
+        ? pb.files.getURL(record as never, file, { thumb: READER_IMAGE_THUMB })
+        : fileUrl,
+      fullSrc: fileUrl,
+      alt: `${record.location || '未命名地点'}的媒体 ${index + 1}`,
+      tone: FALLBACK_IMAGE_TONE,
+    }
+  })
 }
 
 function mapPocketBaseMemo(record: PocketBaseMemoRecord): StillAliveCard {
@@ -118,7 +146,7 @@ function mapPocketBaseMemo(record: PocketBaseMemoRecord): StillAliveCard {
     text: record.text || '',
     location: record.location || '未标注',
     time: formatMemoTime(record.created),
-    images: buildMemoImages(record),
+    media: buildMemoMedia(record),
   })
 }
 

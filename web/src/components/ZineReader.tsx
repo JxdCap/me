@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { ContentImage } from './ContentImage'
+import { X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react'
+import { ContentMedia } from './ContentMedia'
 import { type StillAliveCard } from '../lib/constants'
 import { orderMemosForReader } from '../lib/memos'
 
@@ -19,7 +19,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [categoryStartMemoId, setCategoryStartMemoId] = useState<string | null>(null)
   const [lightboxMemoId, setLightboxMemoId] = useState<string | null>(null)
-  const [lightboxImageIndex, setLightboxImageIndex] = useState(0)
+  const [lightboxMediaIndex, setLightboxMediaIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const lightboxCloseButtonRef = useRef<HTMLButtonElement>(null)
@@ -62,7 +62,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       setActiveCategory(null)
       setCategoryStartMemoId(null)
       setLightboxMemoId(null)
-      setLightboxImageIndex(0)
+      setLightboxMediaIndex(0)
       lastScrollTopRef.current = 0
       if (containerRef.current) containerRef.current.scrollTop = 0
       closeButtonRef.current?.focus()
@@ -82,13 +82,13 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
         }
         if (e.key === 'ArrowRight') {
           e.preventDefault()
-          setLightboxImageIndex((current) =>
-            Math.min(current + 1, Math.max((lightboxMemo?.images.length || 1) - 1, 0))
+          setLightboxMediaIndex((current) =>
+            Math.min(current + 1, Math.max((lightboxMemo?.media.length || 1) - 1, 0))
           )
         }
         if (e.key === 'ArrowLeft') {
           e.preventDefault()
-          setLightboxImageIndex((current) => Math.max(current - 1, 0))
+          setLightboxMediaIndex((current) => Math.max(current - 1, 0))
         }
         return
       }
@@ -115,11 +115,11 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
   const filteredCount = orderedMemos.length
   const lightboxMemo = lightboxMemoId ? orderedMemos.find((memo) => memo.id === lightboxMemoId) || null : null
-  const lightboxImage = lightboxMemo?.images[lightboxImageIndex] || null
+  const lightboxMedia = lightboxMemo?.media[lightboxMediaIndex] || null
 
-  const openLightbox = (memoId: string, imageIndex: number) => {
+  const openLightbox = (memoId: string, mediaIndex: number) => {
     setLightboxMemoId(memoId)
-    setLightboxImageIndex(imageIndex)
+    setLightboxMediaIndex(mediaIndex)
   }
 
   const closeLightbox = () => {
@@ -128,13 +128,13 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     closeButtonRef.current?.focus()
   }
 
-  const goToPrevImage = () => {
-    setLightboxImageIndex((current) => Math.max(current - 1, 0))
+  const goToPrevMedia = () => {
+    setLightboxMediaIndex((current) => Math.max(current - 1, 0))
   }
 
-  const goToNextImage = () => {
-    setLightboxImageIndex((current) =>
-      Math.min(current + 1, Math.max((lightboxMemo?.images.length || 1) - 1, 0))
+  const goToNextMedia = () => {
+    setLightboxMediaIndex((current) =>
+      Math.min(current + 1, Math.max((lightboxMemo?.media.length || 1) - 1, 0))
     )
   }
 
@@ -192,7 +192,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
             {orderedMemos.map((memo, index) => (
               <article
                 key={memo.id}
-                className={`zine-article ${memo.images.length === 0 ? 'has-no-media' : ''}`}
+                className={`zine-article ${memo.media.length === 0 ? 'has-no-media' : ''}`}
                 data-memo-id={memo.id}
                 aria-labelledby={`memo-title-${memo.id}`}
               >
@@ -224,21 +224,40 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                   <p>{memo.text}</p>
                 </div>
 
-                {memo.images.length > 0 && (
-                  <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
-                    {memo.images.map((image, imageIndex) => (
-                      <button
-                        type="button"
-                        key={image.src}
-                        className="zine-image-item zine-image-lightbox-ready"
-                        data-memo-id={memo.id}
-                        data-image-index={imageIndex}
-                        data-full-src={image.fullSrc || image.src}
-                        onClick={() => openLightbox(memo.id, imageIndex)}
-                        aria-label={`查看图片 ${imageIndex + 1}`}
-                      >
-                        <ContentImage image={image} variant="reader" />
-                      </button>
+                {memo.media.length > 0 && (
+                  <div className={`zine-image-grid images-${Math.min(memo.media.length, 9)}`}>
+                    {memo.media.map((media, mediaIndex) => (
+                      media.type === 'video' ? (
+                        <div
+                          key={media.src}
+                          className="zine-image-item zine-media-item zine-video-item"
+                          data-memo-id={memo.id}
+                          data-media-index={mediaIndex}
+                        >
+                          <ContentMedia media={media} variant="reader" controls />
+                          <button
+                            type="button"
+                            className="zine-media-expand"
+                            onClick={() => openLightbox(memo.id, mediaIndex)}
+                            aria-label={`沉浸查看视频 ${mediaIndex + 1}`}
+                          >
+                            <Maximize2 size={15} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          key={media.src}
+                          className="zine-image-item zine-media-item zine-image-lightbox-ready"
+                          data-memo-id={memo.id}
+                          data-media-index={mediaIndex}
+                          data-full-src={media.fullSrc || media.src}
+                          onClick={() => openLightbox(memo.id, mediaIndex)}
+                          aria-label={`查看图片 ${mediaIndex + 1}`}
+                        >
+                          <ContentMedia media={media} variant="reader" />
+                        </button>
+                      )
                     ))}
                   </div>
                 )}
@@ -256,12 +275,12 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
           </div>
 
           <AnimatePresence>
-            {lightboxMemo && lightboxImage && (
+            {lightboxMemo && lightboxMedia && (
               <motion.div
                 className="reader-lightbox"
                 role="dialog"
                 aria-modal="true"
-                aria-label="查看图片"
+                aria-label="查看媒体"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -282,7 +301,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                         {lightboxMemo.category} · {lightboxMemo.location} · {lightboxMemo.time}
                       </span>
                       <span className="reader-lightbox-index">
-                        {lightboxImageIndex + 1} / {lightboxMemo.images.length}
+                        {lightboxMediaIndex + 1} / {lightboxMemo.media.length}
                       </span>
                     </div>
                     <button
@@ -290,7 +309,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                       type="button"
                       className="reader-lightbox-close"
                       onClick={closeLightbox}
-                      aria-label="关闭图片查看"
+                      aria-label="关闭媒体查看"
                     >
                       <X size={18} />
                     </button>
@@ -298,7 +317,7 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
                   <motion.div
                     className="reader-lightbox-media"
-                    key={`${lightboxMemo.id}-${lightboxImageIndex}`}
+                    key={`${lightboxMemo.id}-${lightboxMediaIndex}`}
                     drag
                     dragDirectionLock
                     dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
@@ -309,9 +328,9 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
 
                       if (absX > absY && absX > 72) {
                         if (info.offset.x < 0) {
-                          goToNextImage()
+                          goToNextMedia()
                         } else {
-                          goToPrevImage()
+                          goToPrevMedia()
                         }
                         return
                       }
@@ -324,30 +343,41 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
                   >
-                    <img
-                      src={lightboxImage.fullSrc || lightboxImage.src}
-                      alt={lightboxImage.alt}
-                      className="reader-lightbox-image"
-                    />
+                    {lightboxMedia.type === 'video' ? (
+                      <video
+                        src={lightboxMedia.fullSrc || lightboxMedia.src}
+                        poster={lightboxMedia.posterSrc}
+                        className="reader-lightbox-image reader-lightbox-video"
+                        controls
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={lightboxMedia.fullSrc || lightboxMedia.src}
+                        alt={lightboxMedia.alt}
+                        className="reader-lightbox-image"
+                      />
+                    )}
                   </motion.div>
 
-                  {lightboxMemo.images.length > 1 && (
+                  {lightboxMemo.media.length > 1 && (
                     <div className="reader-lightbox-nav">
                       <button
                         type="button"
                         className="reader-lightbox-nav-button"
-                        onClick={goToPrevImage}
-                        aria-label="上一张"
-                        disabled={lightboxImageIndex === 0}
+                        onClick={goToPrevMedia}
+                        aria-label="上一个媒体"
+                        disabled={lightboxMediaIndex === 0}
                       >
                         <ChevronLeft size={18} />
                       </button>
                       <button
                         type="button"
                         className="reader-lightbox-nav-button"
-                        onClick={goToNextImage}
-                        aria-label="下一张"
-                        disabled={lightboxImageIndex === lightboxMemo.images.length - 1}
+                        onClick={goToNextMedia}
+                        aria-label="下一个媒体"
+                        disabled={lightboxMediaIndex === lightboxMemo.media.length - 1}
                       >
                         <ChevronRight size={18} />
                       </button>
