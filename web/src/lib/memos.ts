@@ -1,4 +1,10 @@
-import { fallbackCards, type StillAliveCard, type StillAliveImage } from './constants'
+import {
+  fallbackCards,
+  MEMO_CATEGORIES,
+  type MemoCategory,
+  type StillAliveCard,
+  type StillAliveImage,
+} from './constants'
 import { pb } from './pocketbase'
 
 const FALLBACK_IMAGE_TONE = '#c7c7cc'
@@ -6,6 +12,7 @@ const MEMOS_COLLECTION = 'memos'
 const SHANGHAI_TIME_ZONE = 'Asia/Shanghai'
 const CARD_IMAGE_THUMB = '228x304'
 const READER_IMAGE_THUMB = '800x600f'
+const DEFAULT_MEMO_CATEGORY: MemoCategory = '记录'
 
 type PocketBaseMemoRecord = {
   id: string
@@ -25,6 +32,13 @@ function normalizeImage(image: StillAliveImage, memo: StillAliveCard, index: num
     alt: image.alt || `${memo.location}的记录图片 ${index + 1}`,
     tone: image.tone || FALLBACK_IMAGE_TONE,
   }
+}
+
+export function normalizeMemoCategory(category?: string | null): MemoCategory {
+  if (!category) return DEFAULT_MEMO_CATEGORY
+  return MEMO_CATEGORIES.includes(category as MemoCategory)
+    ? (category as MemoCategory)
+    : DEFAULT_MEMO_CATEGORY
 }
 
 export function normalizeMemo(memo: StillAliveCard): StillAliveCard {
@@ -100,7 +114,7 @@ function buildMemoImages(record: PocketBaseMemoRecord): StillAliveImage[] {
 function mapPocketBaseMemo(record: PocketBaseMemoRecord): StillAliveCard {
   return normalizeMemo({
     id: record.id,
-    category: record.category || '记录',
+    category: normalizeMemoCategory(record.category),
     text: record.text || '',
     location: record.location || '未标注',
     time: formatMemoTime(record.created),

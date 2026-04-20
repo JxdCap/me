@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ContentImage } from './ContentImage'
 import { type StillAliveCard } from '../lib/constants'
 import { orderMemosForReader } from '../lib/memos'
@@ -18,8 +18,11 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
   const [currentMemoId, setCurrentMemoId] = useState<string | null>(activeMemoId)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [categoryStartMemoId, setCategoryStartMemoId] = useState<string | null>(null)
+  const [lightboxMemoId, setLightboxMemoId] = useState<string | null>(null)
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const lightboxCloseButtonRef = useRef<HTMLButtonElement>(null)
   const lastScrollTopRef = useRef(0)
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -58,6 +61,8 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
       setCurrentMemoId(activeMemoId)
       setActiveCategory(null)
       setCategoryStartMemoId(null)
+      setLightboxMemoId(null)
+      setLightboxImageIndex(0)
       lastScrollTopRef.current = 0
       if (containerRef.current) containerRef.current.scrollTop = 0
       closeButtonRef.current?.focus()
@@ -70,12 +75,34 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (lightboxMemoId) {
+        if (e.key === 'Escape') {
+          setLightboxMemoId(null)
+          return
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          setLightboxImageIndex((current) =>
+            Math.min(current + 1, Math.max((lightboxMemo?.images.length || 1) - 1, 0))
+          )
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          setLightboxImageIndex((current) => Math.max(current - 1, 0))
+        }
+        return
+      }
+
       if (e.key === 'Escape') onClose()
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, lightboxMemoId])
+
+  useEffect(() => {
+    if (lightboxMemoId) lightboxCloseButtonRef.current?.focus()
+  }, [lightboxMemoId])
 
   if (!activeMemoId) return null
 
@@ -87,6 +114,29 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
     : orderMemosForReader(activeMemoId, memos)
   const activeMemo = orderedMemos.find((memo) => memo.id === currentMemoId) || orderedMemos[0]
   const filteredCount = orderedMemos.length
+  const lightboxMemo = lightboxMemoId ? orderedMemos.find((memo) => memo.id === lightboxMemoId) || null : null
+  const lightboxImage = lightboxMemo?.images[lightboxImageIndex] || null
+
+  const openLightbox = (memoId: string, imageIndex: number) => {
+    setLightboxMemoId(memoId)
+    setLightboxImageIndex(imageIndex)
+  }
+
+  const closeLightbox = () => {
+    setLightboxMemoId(null)
+    lightboxCloseButtonRef.current?.blur()
+    closeButtonRef.current?.focus()
+  }
+
+  const goToPrevImage = () => {
+    setLightboxImageIndex((current) => Math.max(current - 1, 0))
+  }
+
+  const goToNextImage = () => {
+    setLightboxImageIndex((current) =>
+      Math.min(current + 1, Math.max((lightboxMemo?.images.length || 1) - 1, 0))
+    )
+  }
 
   return (
     <AnimatePresence>
@@ -177,15 +227,18 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
                 {memo.images.length > 0 && (
                   <div className={`zine-image-grid images-${Math.min(memo.images.length, 9)}`}>
                     {memo.images.map((image, imageIndex) => (
-                      <div
+                      <button
+                        type="button"
                         key={image.src}
                         className="zine-image-item zine-image-lightbox-ready"
                         data-memo-id={memo.id}
                         data-image-index={imageIndex}
                         data-full-src={image.fullSrc || image.src}
+                        onClick={() => openLightbox(memo.id, imageIndex)}
+                        aria-label={`查看图片 ${imageIndex + 1}`}
                       >
                         <ContentImage image={image} variant="reader" />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -201,6 +254,109 @@ export function ZineReader({ isOpen, onClose, activeMemoId, memos }: ZineReaderP
               <button className="back-to-top" onClick={onClose}>回到首页</button>
             </div>
           </div>
+
+          <AnimatePresence>
+            {lightboxMemo && lightboxImage && (
+              <motion.div
+                className="reader-lightbox"
+                role="dialog"
+                aria-modal="true"
+                aria-label="查看图片"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                onClick={closeLightbox}
+              >
+              <motion.div
+                className="reader-lightbox-stage"
+                initial={{ opacity: 0, scale: 0.98, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.985, y: 8 }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                  <div className="reader-lightbox-topbar">
+                    <div className="reader-lightbox-copy">
+                      <span className="reader-lightbox-meta">
+                        {lightboxMemo.category} · {lightboxMemo.location} · {lightboxMemo.time}
+                      </span>
+                      <span className="reader-lightbox-index">
+                        {lightboxImageIndex + 1} / {lightboxMemo.images.length}
+                      </span>
+                    </div>
+                    <button
+                      ref={lightboxCloseButtonRef}
+                      type="button"
+                      className="reader-lightbox-close"
+                      onClick={closeLightbox}
+                      aria-label="关闭图片查看"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <motion.div
+                    className="reader-lightbox-media"
+                    key={`${lightboxMemo.id}-${lightboxImageIndex}`}
+                    drag
+                    dragDirectionLock
+                    dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                    dragElastic={0.16}
+                    onDragEnd={(_, info) => {
+                      const absX = Math.abs(info.offset.x)
+                      const absY = Math.abs(info.offset.y)
+
+                      if (absX > absY && absX > 72) {
+                        if (info.offset.x < 0) {
+                          goToNextImage()
+                        } else {
+                          goToPrevImage()
+                        }
+                        return
+                      }
+
+                      if (info.offset.y > 120 || info.velocity.y > 520) {
+                        closeLightbox()
+                      }
+                    }}
+                    initial={{ opacity: 0.92, scale: 0.99 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                  >
+                    <img
+                      src={lightboxImage.fullSrc || lightboxImage.src}
+                      alt={lightboxImage.alt}
+                      className="reader-lightbox-image"
+                    />
+                  </motion.div>
+
+                  {lightboxMemo.images.length > 1 && (
+                    <div className="reader-lightbox-nav">
+                      <button
+                        type="button"
+                        className="reader-lightbox-nav-button"
+                        onClick={goToPrevImage}
+                        aria-label="上一张"
+                        disabled={lightboxImageIndex === 0}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className="reader-lightbox-nav-button"
+                        onClick={goToNextImage}
+                        aria-label="下一张"
+                        disabled={lightboxImageIndex === lightboxMemo.images.length - 1}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

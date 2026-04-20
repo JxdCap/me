@@ -1,3 +1,6 @@
+export const MEMO_CATEGORIES = ['记录', '折腾', '见闻', '风景'] as const
+export type MemoCategory = (typeof MEMO_CATEGORIES)[number]
+
 export type StillAliveImage = {
   src: string
   cardSrc?: string
@@ -9,7 +12,7 @@ export type StillAliveImage = {
 
 export type StillAliveCard = {
   id: string
-  category: string
+  category: MemoCategory
   time: string
   location: string
   text: string
