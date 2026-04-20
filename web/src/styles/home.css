@@ -1003,20 +1003,20 @@
 
 .zine-image-grid {
   display: grid;
-  gap: 14px;
-  margin: 30px 0 0;
+  gap: 12px;
+  margin: 28px 0 0;
   grid-auto-flow: dense;
 }
 
 .zine-image-item {
   position: relative;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: 12px;
   background:
-    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--image-tone, #c7c7cc) 28%, white), transparent 62%),
-    color-mix(in srgb, var(--image-tone, #c7c7cc) 38%, var(--surface-content));
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--image-tone, #c7c7cc) 24%, white), transparent 60%),
+    color-mix(in srgb, var(--image-tone, #c7c7cc) 34%, var(--surface-content));
   aspect-ratio: 4/3; 
-  box-shadow: inset 0 0 0 1px var(--border-color);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-color) 72%, transparent);
   isolation: isolate;
 }
 
@@ -1029,6 +1029,7 @@
   border: none;
   padding: 0;
   margin: 0;
+  background: transparent;
 }
 
 .zine-image-item img {
@@ -1046,11 +1047,39 @@
   opacity: 0.66;
 }
 
+/* Single hero image */
 .images-1 { grid-template-columns: 1fr; }
-.images-2 { grid-template-columns: 1fr 1fr; }
-.images-3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
-.images-3 .zine-image-item:first-child { grid-row: span 2; }
-.images-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+/* Small cluster */
+.images-2 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* Primary + supporting */
+.images-3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "hero hero"
+    "side-top side-bottom";
+}
+.images-3 .zine-image-item:first-child {
+  grid-area: hero;
+  aspect-ratio: 16/10;
+}
+.images-3 .zine-image-item:nth-child(2) {
+  grid-area: side-top;
+}
+.images-3 .zine-image-item:nth-child(3) {
+  grid-area: side-bottom;
+}
+
+/* Balanced four-up */
+.images-4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Collection */
 .images-5,
 .images-6,
 .images-7,
@@ -1063,6 +1092,7 @@
 .images-8 .zine-image-item:first-child {
   grid-column: span 2;
   grid-row: span 2;
+  aspect-ratio: 4/3;
 }
 .images-9 { grid-template-columns: repeat(3, 1fr); }
 
@@ -1206,12 +1236,16 @@
   }
 
   .zine-image-grid {
-    gap: 12px;
-    margin-top: 28px;
+    gap: 10px;
+    margin-top: 24px;
   }
 
   .images-2 {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .images-3 .zine-image-item:first-child {
+    aspect-ratio: 4/3;
   }
 
   .images-5,
@@ -1405,7 +1439,7 @@
   .zine-image-grid {
     width: min(100%, 760px);
     margin-top: 36px;
-    gap: 16px;
+    gap: 14px;
   }
 
   .images-1 {
@@ -1413,6 +1447,10 @@
   }
 
   .images-1 .zine-image-item {
+    aspect-ratio: 16/10;
+  }
+
+  .images-3 .zine-image-item:first-child {
     aspect-ratio: 16/10;
   }
 
