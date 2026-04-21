@@ -307,10 +307,25 @@ content 正文
 media   媒体
 ```
 
-`media` 字段类型如果可以选择，选：
+`media` 表单字段类型如果可以选择，选：
 
 ```text
 文件
+```
+
+但变量本身不要选「文件」。点进变量属性时：
+
+```text
+图片变量：照片媒体
+视频变量：媒体
+```
+
+也就是说：
+
+```text
+表单字段类型：文件
+图片变量类型：照片媒体
+视频变量类型：媒体
 ```
 
 如果 iOS 提示 `media` 是多个项目，允许它作为多个文件上传。
@@ -412,6 +427,18 @@ media_mode append
 media      当前照片文件
 ```
 
+多图追加时，`media` 表单字段类型仍然选：
+
+```text
+文件
+```
+
+当前照片变量本身选：
+
+```text
+照片媒体
+```
+
 追加成功后返回里的 `media.saved` 应该逐步增加。
 
 例如第二张追加成功后：
@@ -455,6 +482,104 @@ poster = 空
 
 没有 `poster` 时，前端会显示默认视频预览；视频仍然可以播放。
 
+一条 memo 最多放一个视频。可以是：
+
+```text
+一个视频
+一个视频 + 多张图片
+```
+
+不建议也不支持：
+
+```text
+多个视频
+```
+
+如果上传多个视频，接口会返回：
+
+```json
+{
+  "ok": false,
+  "error": "multiple_videos_not_supported"
+}
+```
+
+快捷指令里选择视频时：
+
+```text
+选择照片
+包含：视频
+选择多个：关闭
+```
+
+`获取 URL 内容` 表单：
+
+```text
+token   JxdCapMemos
+content 正文
+media   视频
+```
+
+`media` 表单字段类型选择：
+
+```text
+文件
+```
+
+视频变量本身选择：
+
+```text
+媒体
+```
+
+不要把视频变量本身改成「文件」，否则中间件可能收到：
+
+```json
+"media": {
+  "received": 0
+}
+```
+
+成功返回里重点看：
+
+```json
+{
+  "media": {
+    "received": 1,
+    "saved": 1,
+    "received_files": [
+      {
+        "filename": "IMG_0001.MOV",
+        "content_type": "video/quicktime",
+        "size": 23800123
+      }
+    ]
+  }
+}
+```
+
+如果返回：
+
+```json
+{
+  "ok": false,
+  "error": "unsupported_file_type"
+}
+```
+
+说明快捷指令传来的不是 `image/*` 或 `video/*`。
+
+如果返回：
+
+```json
+{
+  "ok": false,
+  "error": "file_too_large"
+}
+```
+
+说明视频超过了服务器 `MEMOS_MAX_UPLOAD_MB` 限制。
+
 ## 八、poster 封面版
 
 当图片和视频上传都稳定后，再加 `poster`。
@@ -465,36 +590,136 @@ poster = 空
 发布 Memos 视频封面
 ```
 
-在媒体版基础上增加一个动作：
+### 新发视频并带封面
+
+动作结构：
+
+```text
+1. 获取快捷指令输入
+2. 选择照片：视频
+3. 选择照片：封面图
+4. 获取 URL 内容
+5. 显示结果
+```
+
+选择视频：
 
 ```text
 选择照片
+包含：视频
+选择多个：关闭
 ```
 
-设置：
+视频变量本身选择：
 
 ```text
+媒体
+```
+
+选择封面图：
+
+```text
+选择照片
 包含：图像
 选择多个：关闭
 ```
 
-变量命名：
+封面变量本身选择：
 
 ```text
-封面
+照片媒体
 ```
 
-在 `获取 URL 内容` 的表单里增加：
+`获取 URL 内容`：
 
 ```text
-poster  封面
+URL：https://a.ithe.cn/api/memos/sync
+方法：POST
+请求体：表单
 ```
 
-规则：
+表单字段：
 
 ```text
-media  = 视频文件
-poster = 视频封面图
+token   JxdCapMemos
+content 正文
+media   视频
+poster  封面图
+```
+
+表单字段类型：
+
+```text
+media   文件
+poster  文件
+```
+
+也就是说：
+
+```text
+media 表单字段类型：文件，视频变量本身：媒体
+poster 表单字段类型：文件，封面变量本身：照片媒体
+```
+
+成功返回里重点看：
+
+```json
+{
+  "media": {
+    "received": 1,
+    "saved": 1
+  },
+  "poster": {
+    "received": true,
+    "saved": true,
+    "file": "cover_xxx.png",
+    "received_file": {
+      "filename": "IMG_0002.PNG",
+      "content_type": "image/png",
+      "size": 123456
+    }
+  }
+}
+```
+
+### 给已有视频补封面
+
+如果视频已经发布，只想补一个封面：
+
+```text
+content  @id:已有memo_id
+poster   封面图
+```
+
+表单字段：
+
+```text
+token   JxdCapMemos
+content @id:已有memo_id
+poster  封面图
+```
+
+`poster` 表单字段类型仍然选：
+
+```text
+文件
+```
+
+封面变量本身选：
+
+```text
+照片媒体
+```
+
+中间件会保留原正文、分类、位置、状态，只更新 `poster`。
+
+如果这条 memo 没有任何 `media`，单独传 `poster` 会返回：
+
+```json
+{
+  "ok": false,
+  "error": "poster_without_media"
+}
 ```
 
 如果只发图片，不需要传 `poster`。

@@ -15,12 +15,16 @@ MIDDLEWARE_TOKEN = os.getenv("MEMOS_SYNC_TOKEN", "")
 POCKETBASE_TOKEN = os.getenv("POCKETBASE_TOKEN", "")
 POCKETBASE_EMAIL = os.getenv("POCKETBASE_EMAIL", "")
 POCKETBASE_PASSWORD = os.getenv("POCKETBASE_PASSWORD", "")
+POCKETBASE_TIMEOUT_SECONDS = float(os.getenv("POCKETBASE_TIMEOUT_SECONDS", "300"))
+MAX_UPLOAD_BYTES = int(os.getenv("MEMOS_MAX_UPLOAD_MB", "300")) * 1024 * 1024
 
 DEFAULT_CATEGORY = "碎语"
 VALID_CATEGORIES = {item.strip() for item in os.getenv("MEMOS_CATEGORIES", "风景,碎语,吐槽,分享").split(",") if item.strip()}
 VALID_CATEGORIES.add(DEFAULT_CATEGORY)
 DEFAULT_LOCATION = "未标注"
 POCKETBASE_TOKEN_CACHE: str | None = None
+IMAGE_EXTENSIONS = {".avif", ".gif", ".heic", ".heif", ".jpeg", ".jpg", ".png", ".webp"}
+VIDEO_EXTENSIONS = {".m4v", ".mov", ".mp4", ".webm"}
 
 app = FastAPI(title="Memos Sync Middleware", version="0.1.0")
 
@@ -53,6 +57,14 @@ class SubmitResult:
     record: dict[str, Any]
     media_received: int
     poster_received: bool
+    media_received_files: list[dict[str, Any]]
+    poster_received_file: dict[str, Any] | None
+
+
+@dataclass
+class UploadReadResult:
+    fields: list[tuple[str, tuple[str, bytes, str]]]
+    files: list[dict[str, Any]]
 
 
 def fail(error: str, status_code: int = 400, **extra: Any) -> JSONResponse:
@@ -150,20 +162,60 @@ async def get_pocketbase_token(client: httpx.AsyncClient) -> str:
     raise AppError("pocketbase_auth_failed", 502, detail=last_error)
 
 
-async def read_uploads(files: list[UploadFile] | None, field_name: str) -> list[tuple[str, tuple[str, bytes, str]]]:
+async def read_uploads(
+    files: list[UploadFile] | None,
+    field_name: str,
+    allowed_prefixes: tuple[str, ...],
+) -> UploadReadResult:
     result: list[tuple[str, tuple[str, bytes, str]]] = []
+    info: list[dict[str, Any]] = []
     for file in files or []:
         if not file.filename:
             continue
+        content_type = file.content_type or "application/octet-stream"
+        if allowed_prefixes and not is_allowed_upload(file.filename, content_type, allowed_prefixes):
+            raise AppError("unsupported_file_type", 400, filename=file.filename, content_type=content_type)
         content = await file.read()
         if not content:
             continue
-        result.append((field_name, (file.filename, content, file.content_type or "application/octet-stream")))
-    return result
+        size = len(content)
+        if size > MAX_UPLOAD_BYTES:
+            raise AppError("file_too_large", 413, filename=file.filename, max_mb=MAX_UPLOAD_BYTES // 1024 // 1024)
+        result.append((field_name, (file.filename, content, content_type)))
+        info.append({"filename": file.filename, "content_type": content_type, "size": size, "kind": upload_kind(file.filename, content_type)})
+    return UploadReadResult(result, info)
 
 
-async def read_upload(file: UploadFile | None, field_name: str) -> list[tuple[str, tuple[str, bytes, str]]]:
-    return await read_uploads([file] if file else None, field_name)
+def is_allowed_upload(filename: str, content_type: str, allowed_prefixes: tuple[str, ...]) -> bool:
+    if content_type.startswith(allowed_prefixes):
+        return True
+
+    if content_type != "application/octet-stream":
+        return False
+
+    extension = os.path.splitext(filename.lower())[1]
+    if "image/" in allowed_prefixes and extension in IMAGE_EXTENSIONS:
+        return True
+    if "video/" in allowed_prefixes and extension in VIDEO_EXTENSIONS:
+        return True
+    return False
+
+
+def upload_kind(filename: str, content_type: str) -> str:
+    extension = os.path.splitext(filename.lower())[1]
+    if content_type.startswith("video/") or extension in VIDEO_EXTENSIONS:
+        return "video"
+    if content_type.startswith("image/") or extension in IMAGE_EXTENSIONS:
+        return "image"
+    return "unknown"
+
+
+async def read_upload(
+    file: UploadFile | None,
+    field_name: str,
+    allowed_prefixes: tuple[str, ...],
+) -> UploadReadResult:
+    return await read_uploads([file] if file else None, field_name, allowed_prefixes)
 
 
 def delete_existing_files(record: dict[str, Any], field_name: str) -> list[tuple[str, str]]:
@@ -218,7 +270,7 @@ def send_pocketbase_write_sync(
     headers: dict[str, str],
     multipart_fields: list[tuple[str, tuple[str | None, str | bytes, str] | tuple[str, bytes, str]]],
 ) -> httpx.Response:
-    with httpx.Client(timeout=60) as client:
+    with httpx.Client(timeout=POCKETBASE_TIMEOUT_SECONDS) as client:
         return client.request(
             method,
             url,
@@ -250,9 +302,23 @@ async def submit_record(
 ) -> SubmitResult:
     headers = {"Authorization": f"Bearer {token}"}
     media_field_name = "media+" if media_mode == "append" else "media"
-    media_uploads = await read_uploads(media_files, media_field_name)
-    poster_uploads = await read_upload(poster_file, "poster")
+    media_result = await read_uploads(media_files, media_field_name, ("image/", "video/"))
+    poster_result = await read_upload(poster_file, "poster", ("image/",))
+    media_uploads = media_result.fields
+    poster_uploads = poster_result.fields
+    media_info = media_result.files
+    poster_info = poster_result.files
     is_media_only_update = bool(existing) and not parsed.text and bool(media_uploads or poster_uploads)
+
+    existing_video_count = count_existing_videos(existing) if media_mode == "append" else 0
+    received_video_count = count_received_videos(media_info)
+    if existing_video_count + received_video_count > 1:
+        raise AppError(
+            "multiple_videos_not_supported",
+            400,
+            existing_videos=existing_video_count,
+            received_videos=received_video_count,
+        )
 
     data: dict[str, str] = {
         "text": str(existing.get("text") or "") if is_media_only_update and existing else parsed.text,
@@ -292,6 +358,8 @@ async def submit_record(
         record=response.json(),
         media_received=len(media_uploads),
         poster_received=bool(poster_uploads),
+        media_received_files=media_info,
+        poster_received_file=poster_info[0] if poster_info else None,
     )
 
 
@@ -308,6 +376,20 @@ def file_name(value: Any) -> str:
         return value
     names = file_names(value)
     return names[0] if names else ""
+
+
+def has_existing_media(record: dict[str, Any] | None) -> bool:
+    if not record:
+        return False
+    return bool(file_names(record.get("media")))
+
+
+def count_existing_videos(record: dict[str, Any] | None) -> int:
+    return sum(1 for filename in file_names(record.get("media") if record else None) if upload_kind(filename, "application/octet-stream") == "video")
+
+
+def count_received_videos(files: list[dict[str, Any]]) -> int:
+    return sum(1 for file in files if file.get("kind") == "video")
 
 
 @app.get("/health")
@@ -340,7 +422,7 @@ async def sync_memo(
     if not parsed.is_delete and not parsed.text and has_upload and not parsed.record_id:
         return fail("missing_id_for_media_only")
 
-    async with httpx.AsyncClient(timeout=60) as client:
+    async with httpx.AsyncClient(timeout=POCKETBASE_TIMEOUT_SECONDS) as client:
         pb_token = await get_pocketbase_token(client)
         existing = None
 
@@ -348,6 +430,9 @@ async def sync_memo(
             existing = await get_record(client, pb_token, parsed.record_id)
             if not existing:
                 return fail("not_found", 404, id=parsed.record_id)
+
+        if poster is not None and not media and not has_existing_media(existing):
+            return fail("poster_without_media")
 
         if parsed.is_delete:
             response = await client.patch(
@@ -381,11 +466,13 @@ async def sync_memo(
                     "received": submit_result.media_received,
                     "saved": len(saved_media),
                     "files": saved_media,
+                    "received_files": submit_result.media_received_files,
                 },
                 "poster": {
                     "received": submit_result.poster_received,
                     "saved": bool(saved_poster),
                     "file": saved_poster,
+                    "received_file": submit_result.poster_received_file,
                 },
             }
         )
