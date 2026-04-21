@@ -1,6 +1,8 @@
 import asyncio
+import logging
 import os
 import re
+import secrets
 from dataclasses import dataclass
 from typing import Any
 
@@ -17,6 +19,7 @@ POCKETBASE_EMAIL = os.getenv("POCKETBASE_EMAIL", "")
 POCKETBASE_PASSWORD = os.getenv("POCKETBASE_PASSWORD", "")
 POCKETBASE_TIMEOUT_SECONDS = float(os.getenv("POCKETBASE_TIMEOUT_SECONDS", "300"))
 MAX_UPLOAD_BYTES = int(os.getenv("MEMOS_MAX_UPLOAD_MB", "300")) * 1024 * 1024
+MAX_MEDIA_FILES = int(os.getenv("MEMOS_MAX_MEDIA_FILES", "9"))
 
 DEFAULT_CATEGORY = "碎语"
 VALID_CATEGORIES = {item.strip() for item in os.getenv("MEMOS_CATEGORIES", "风景,碎语,吐槽,分享").split(",") if item.strip()}
@@ -26,19 +29,24 @@ POCKETBASE_TOKEN_CACHE: str | None = None
 IMAGE_EXTENSIONS = {".avif", ".gif", ".heic", ".heif", ".jpeg", ".jpg", ".png", ".webp"}
 VIDEO_EXTENSIONS = {".m4v", ".mov", ".mp4", ".webm"}
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+logger = logging.getLogger("memos-sync")
+
 app = FastAPI(title="Memos Sync Middleware", version="0.1.0")
 
 
 class AppError(Exception):
-    def __init__(self, error: str, status_code: int = 400, **extra: Any) -> None:
+    def __init__(self, error: str, status_code: int = 400, request_id: str | None = None, **extra: Any) -> None:
         self.error = error
         self.status_code = status_code
+        self.request_id = request_id
         self.extra = extra
 
 
 @app.exception_handler(AppError)
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
-    return fail(exc.error, exc.status_code, **exc.extra)
+    log_event("error", exc.request_id, error=exc.error, status_code=exc.status_code, **exc.extra)
+    return fail(exc.error, exc.status_code, request_id=exc.request_id, **exc.extra)
 
 
 @dataclass
@@ -71,16 +79,31 @@ def fail(error: str, status_code: int = 400, **extra: Any) -> JSONResponse:
     return JSONResponse({"ok": False, "error": error, **extra}, status_code=status_code)
 
 
-def require_token(form_token: str | None, authorization: str | None) -> None:
+def new_request_id() -> str:
+    return secrets.token_hex(4)
+
+
+def log_event(event: str, request_id: str | None, **fields: Any) -> None:
+    pairs = [f"event={event}"]
+    if request_id:
+        pairs.append(f"request_id={request_id}")
+    for key, value in fields.items():
+        if value is None:
+            continue
+        pairs.append(f"{key}={value}")
+    logger.info(" ".join(pairs))
+
+
+def require_token(form_token: str | None, authorization: str | None, request_id: str | None = None) -> None:
     if not MIDDLEWARE_TOKEN:
-        raise AppError("server_token_not_configured", 500)
+        raise AppError("server_token_not_configured", 500, request_id=request_id)
 
     bearer = ""
     if authorization and authorization.lower().startswith("bearer "):
         bearer = authorization[7:].strip()
 
     if form_token != MIDDLEWARE_TOKEN and bearer != MIDDLEWARE_TOKEN:
-        raise AppError("unauthorized", 401)
+        raise AppError("unauthorized", 401, request_id=request_id)
 
 
 def parse_content(raw: str) -> ParsedMemo:
@@ -160,6 +183,16 @@ async def get_pocketbase_token(client: httpx.AsyncClient) -> str:
         last_error = response.text
 
     raise AppError("pocketbase_auth_failed", 502, detail=last_error)
+
+
+def clear_pocketbase_token_cache() -> None:
+    global POCKETBASE_TOKEN_CACHE
+    POCKETBASE_TOKEN_CACHE = None
+
+
+async def refresh_pocketbase_token(client: httpx.AsyncClient) -> str:
+    clear_pocketbase_token_cache()
+    return await get_pocketbase_token(client)
 
 
 async def read_uploads(
@@ -251,6 +284,39 @@ async def send_pocketbase_write(
     return await client.request(method, url, headers=headers, data=data)
 
 
+async def send_pocketbase_write_with_retry(
+    client: httpx.AsyncClient,
+    token: str,
+    method: str,
+    url: str,
+    data: dict[str, str],
+    delete_fields: list[tuple[str, str]] | None = None,
+    upload_fields: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+) -> httpx.Response:
+    response = await send_pocketbase_write(
+        client,
+        method,
+        url,
+        {"Authorization": f"Bearer {token}"},
+        data,
+        delete_fields,
+        upload_fields,
+    )
+    if POCKETBASE_TOKEN or response.status_code not in {401, 403}:
+        return response
+
+    refreshed_token = await refresh_pocketbase_token(client)
+    return await send_pocketbase_write(
+        client,
+        method,
+        url,
+        {"Authorization": f"Bearer {refreshed_token}"},
+        data,
+        delete_fields,
+        upload_fields,
+    )
+
+
 def build_multipart_fields(
     data: dict[str, str],
     delete_fields: list[tuple[str, str]],
@@ -284,6 +350,12 @@ async def get_record(client: httpx.AsyncClient, token: str, record_id: str) -> d
         f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{record_id}",
         headers={"Authorization": f"Bearer {token}"},
     )
+    if not POCKETBASE_TOKEN and response.status_code in {401, 403}:
+        refreshed_token = await refresh_pocketbase_token(client)
+        response = await client.get(
+            f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{record_id}",
+            headers={"Authorization": f"Bearer {refreshed_token}"},
+        )
     if response.status_code == 404:
         return None
     if response.status_code >= 400:
@@ -299,8 +371,8 @@ async def submit_record(
     media_files: list[UploadFile] | None,
     poster_file: UploadFile | None,
     media_mode: str,
+    request_id: str,
 ) -> SubmitResult:
-    headers = {"Authorization": f"Bearer {token}"}
     media_field_name = "media+" if media_mode == "append" else "media"
     media_result = await read_uploads(media_files, media_field_name, ("image/", "video/"))
     poster_result = await read_upload(poster_file, "poster", ("image/",))
@@ -316,8 +388,21 @@ async def submit_record(
         raise AppError(
             "multiple_videos_not_supported",
             400,
+            request_id=request_id,
             existing_videos=existing_video_count,
             received_videos=received_video_count,
+        )
+
+    current_media_count, next_media_count = media_count_after_write(existing, len(media_uploads), media_mode)
+    if next_media_count > MAX_MEDIA_FILES:
+        raise AppError(
+            "too_many_media_files",
+            400,
+            request_id=request_id,
+            max=MAX_MEDIA_FILES,
+            current=current_media_count,
+            received=len(media_uploads),
+            next=next_media_count,
         )
 
     data: dict[str, str] = {
@@ -341,18 +426,18 @@ async def submit_record(
         else f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records"
     )
 
-    response = await send_pocketbase_write(
+    response = await send_pocketbase_write_with_retry(
         client,
+        token,
         "PATCH" if existing else "POST",
         url,
-        headers,
         data,
         delete_fields,
         upload_fields,
     )
 
     if response.status_code >= 400:
-        raise AppError("pocketbase_write_failed", 502, detail=response.text, pocketbase_status=response.status_code)
+        raise AppError("pocketbase_write_failed", 502, request_id=request_id, detail=response.text, pocketbase_status=response.status_code)
 
     return SubmitResult(
         record=response.json(),
@@ -392,6 +477,13 @@ def count_received_videos(files: list[dict[str, Any]]) -> int:
     return sum(1 for file in files if file.get("kind") == "video")
 
 
+def media_count_after_write(existing: dict[str, Any] | None, received_media_count: int, media_mode: str) -> tuple[int, int]:
+    current = len(file_names(existing.get("media"))) if existing else 0
+    if media_mode == "append":
+        return current, current + received_media_count
+    return current, received_media_count
+
+
 @app.get("/health")
 async def health() -> dict[str, bool]:
     return {"ok": True}
@@ -406,21 +498,27 @@ async def sync_memo(
     poster: UploadFile | None = File(None),
     authorization: str | None = Header(None),
 ) -> JSONResponse:
-    require_token(token, authorization)
+    request_id = new_request_id()
+    require_token(token, authorization, request_id)
     if media_mode not in {"replace", "append"}:
-        return fail("invalid_media_mode")
+        log_event("error", request_id, error="invalid_media_mode", media_mode=media_mode)
+        return fail("invalid_media_mode", request_id=request_id)
 
     parsed = parse_content(content)
     has_upload = bool(media) or poster is not None
 
     if parsed.is_delete and not parsed.record_id:
-        return fail("missing_id_for_delete")
+        log_event("error", request_id, error="missing_id_for_delete")
+        return fail("missing_id_for_delete", request_id=request_id)
     if media_mode == "append" and not parsed.record_id:
-        return fail("missing_id_for_append")
+        log_event("error", request_id, error="missing_id_for_append")
+        return fail("missing_id_for_append", request_id=request_id)
     if not parsed.is_delete and not parsed.text and not has_upload:
-        return fail("empty_text")
+        log_event("error", request_id, error="empty_text")
+        return fail("empty_text", request_id=request_id)
     if not parsed.is_delete and not parsed.text and has_upload and not parsed.record_id:
-        return fail("missing_id_for_media_only")
+        log_event("error", request_id, error="missing_id_for_media_only")
+        return fail("missing_id_for_media_only", request_id=request_id)
 
     async with httpx.AsyncClient(timeout=POCKETBASE_TIMEOUT_SECONDS) as client:
         pb_token = await get_pocketbase_token(client)
@@ -429,22 +527,27 @@ async def sync_memo(
         if parsed.record_id:
             existing = await get_record(client, pb_token, parsed.record_id)
             if not existing:
-                return fail("not_found", 404, id=parsed.record_id)
+                log_event("error", request_id, error="not_found", id=parsed.record_id)
+                return fail("not_found", 404, request_id=request_id, id=parsed.record_id)
 
         if poster is not None and not media and not has_existing_media(existing):
-            return fail("poster_without_media")
+            log_event("error", request_id, error="poster_without_media", id=parsed.record_id)
+            return fail("poster_without_media", request_id=request_id)
 
         if parsed.is_delete:
-            response = await client.patch(
+            response = await send_pocketbase_write_with_retry(
+                client,
+                pb_token,
+                "PATCH",
                 f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{parsed.record_id}",
-                headers={"Authorization": f"Bearer {pb_token}"},
-                data={"status": "deleted"},
+                {"status": "deleted"},
             )
             if response.status_code >= 400:
-                raise AppError("pocketbase_delete_failed", 502, detail=response.text, pocketbase_status=response.status_code)
-            return JSONResponse({"ok": True, "action": "deleted", "id": parsed.record_id, "status": "deleted"})
+                raise AppError("pocketbase_delete_failed", 502, request_id=request_id, detail=response.text, pocketbase_status=response.status_code)
+            log_event("success", request_id, action="deleted", id=parsed.record_id, status="deleted")
+            return JSONResponse({"ok": True, "request_id": request_id, "action": "deleted", "id": parsed.record_id, "status": "deleted"})
 
-        submit_result = await submit_record(client, pb_token, parsed, existing, media, poster, media_mode)
+        submit_result = await submit_record(client, pb_token, parsed, existing, media, poster, media_mode, request_id)
         record = submit_result.record
         action = "updated" if existing else "created"
         if parsed.is_hidden:
@@ -452,10 +555,24 @@ async def sync_memo(
 
         saved_media = file_names(record.get("media"))
         saved_poster = file_name(record.get("poster"))
+        log_event(
+            "success",
+            request_id,
+            action=action,
+            id=record.get("id"),
+            category=record.get("category"),
+            location=record.get("location"),
+            status=record.get("status"),
+            media_mode=media_mode,
+            media_received=submit_result.media_received,
+            media_saved=len(saved_media),
+            poster=bool(saved_poster),
+        )
 
         return JSONResponse(
             {
                 "ok": True,
+                "request_id": request_id,
                 "action": action,
                 "id": record.get("id"),
                 "category": record.get("category"),

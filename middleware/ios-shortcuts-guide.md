@@ -194,6 +194,7 @@ content 快捷指令输入
 ```json
 {
   "ok": true,
+  "request_id": "a1b2c3d4",
   "action": "created",
   "id": "0afrkupw33h99r2",
   "category": "碎语",
@@ -203,6 +204,14 @@ content 快捷指令输入
 ```
 
 返回里的 `id` 很重要，后续更新、隐藏、删除都需要它。
+
+`request_id` 用于排查服务器日志。服务器上可以用：
+
+```bash
+journalctl -u memos-sync -n 100 --no-pager
+```
+
+查找同一个 `request_id`。
 
 ## 四、媒体快捷指令
 
@@ -501,6 +510,16 @@ poster = 空
 {
   "ok": false,
   "error": "multiple_videos_not_supported"
+}
+```
+
+一条 memo 的媒体数量上限由服务器 `MEMOS_MAX_MEDIA_FILES` 控制，当前建议是 9。超过会返回：
+
+```json
+{
+  "ok": false,
+  "error": "too_many_media_files",
+  "max": 9
 }
 ```
 
