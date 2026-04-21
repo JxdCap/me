@@ -171,8 +171,17 @@ sudo journalctl -u memos-sync -f
 User=www-data
 Group=www-data
 WorkingDirectory=/opt/memos-sync
-ExecStart=/opt/memos-sync/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8787 --workers 1
+ExecStart=/opt/memos-sync/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8787 --workers 1
 ```
+
+如果 `systemctl status memos-sync` 出现 `status=203/EXEC`，说明 `ExecStart` 指向的文件不存在或不可执行。优先检查虚拟环境目录是否真的是 `.venv`：
+
+```bash
+ls -l /opt/memos-sync/.venv/bin/python
+ls -l /opt/memos-sync/.venv/bin/uvicorn
+```
+
+如果你的虚拟环境实际叫 `venv`，要么重建为 `.venv`，要么把 service 里的 `.venv` 改成 `venv`。
 
 nginx 可反代到：
 

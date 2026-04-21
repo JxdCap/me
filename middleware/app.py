@@ -150,6 +150,27 @@ def delete_existing_files(record: dict[str, Any], field_name: str) -> list[tuple
     return []
 
 
+async def send_pocketbase_write(
+    client: httpx.AsyncClient,
+    method: str,
+    url: str,
+    headers: dict[str, str],
+    data: dict[str, str],
+    delete_fields: list[tuple[str, str]] | None = None,
+    upload_fields: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+) -> httpx.Response:
+    if delete_fields or upload_fields:
+        return await client.request(
+            method,
+            url,
+            headers=headers,
+            data=list(data.items()) + (delete_fields or []),
+            files=upload_fields or None,
+        )
+
+    return await client.request(method, url, headers=headers, data=data)
+
+
 async def get_record(client: httpx.AsyncClient, token: str, record_id: str) -> dict[str, Any] | None:
     response = await client.get(
         f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{record_id}",
@@ -187,23 +208,22 @@ async def submit_record(
     if existing and poster_uploads:
         delete_fields.extend(delete_existing_files(existing, "poster"))
 
-    data_fields = list(data.items()) + delete_fields
     upload_fields = media_uploads + poster_uploads
+    url = (
+        f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{parsed.record_id}"
+        if existing
+        else f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records"
+    )
 
-    if existing:
-        response = await client.patch(
-            f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{parsed.record_id}",
-            headers=headers,
-            data=data_fields,
-            files=upload_fields or None,
-        )
-    else:
-        response = await client.post(
-            f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records",
-            headers=headers,
-            data=data_fields,
-            files=upload_fields or None,
-        )
+    response = await send_pocketbase_write(
+        client,
+        "PATCH" if existing else "POST",
+        url,
+        headers,
+        data,
+        delete_fields,
+        upload_fields,
+    )
 
     if response.status_code >= 400:
         raise HTTPException(status_code=502, detail=response.text)
