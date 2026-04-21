@@ -86,6 +86,7 @@
 
 - 没有传 `media`：不修改原 `media`。
 - 传了 `media`：覆盖原 `media`。
+- `media_mode=append`：追加到原 `media`，中间件会转成 PocketBase 的 `media+` 文件字段。
 - 没有传 `poster`：不修改原 `poster`。
 - 传了 `poster`：覆盖原 `poster`。
 
@@ -97,6 +98,7 @@
 export MEMOS_SYNC_TOKEN="your-ios-token"
 export POCKETBASE_URL="https://a.ithe.cn"
 export POCKETBASE_COLLECTION="memos"
+export MEMOS_CATEGORIES="风景,碎语,吐槽,分享"
 ```
 
 PocketBase 鉴权二选一。
@@ -214,6 +216,14 @@ token    必填，也可使用 Authorization: Bearer
 content  必填，备忘录全文
 media    可选，多文件
 poster   可选，单文件
+media_mode 可选，replace 或 append，默认 replace
+```
+
+规则：
+
+```text
+media_mode=replace  上传 media 时覆盖旧 media。
+media_mode=append   上传 media 时追加到旧 media，必须在 content 里带 @id。
 ```
 
 返回：
@@ -228,3 +238,16 @@ poster   可选，单文件
   "status": "published"
 }
 ```
+
+错误返回统一为：
+
+```json
+{
+  "ok": false,
+  "error": "pocketbase_write_failed",
+  "detail": "...",
+  "pocketbase_status": 400
+}
+```
+
+如果使用 `POCKETBASE_EMAIL` / `POCKETBASE_PASSWORD`，中间件会缓存登录得到的 PocketBase token，避免每次上传图片都重新登录。重启服务会清空缓存并重新登录。
