@@ -1,0 +1,22 @@
+[Unit]
+Description=Memos Markdown Importer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/memos-import
+EnvironmentFile=/etc/memos-sync.env
+ExecStart=/opt/memos-import/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8788 --workers 1
+Restart=always
+RestartSec=3
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
