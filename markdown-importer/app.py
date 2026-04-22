@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 
 
 POCKETBASE_URL = os.getenv("POCKETBASE_URL", "http://127.0.0.1:8090").rstrip("/")
+POCKETBASE_PUBLIC_URL = os.getenv("POCKETBASE_PUBLIC_URL", POCKETBASE_URL).rstrip("/")
 POCKETBASE_COLLECTION = os.getenv("POCKETBASE_COLLECTION", "memos")
 MIDDLEWARE_TOKEN = os.getenv("MEMOS_SYNC_TOKEN", "")
 POCKETBASE_TOKEN = os.getenv("POCKETBASE_TOKEN", "")
@@ -65,6 +66,7 @@ class ParsedMemo:
     status: str
     is_delete: bool
     is_hidden: bool
+    kind: str
 
 
 @dataclass
@@ -79,12 +81,19 @@ class ArchiveMedia:
 @dataclass
 class ArchivePayload:
     markdown_name: str
+    markdown_parent: PurePosixPath
+    raw_markdown_text: str
     markdown_text: str
     media: list[ArchiveMedia]
+    media_paths: list[str]
 
 
 def media_count_by_kind(media: list[ArchiveMedia], kind: str) -> int:
     return sum(1 for item in media if item.kind == kind)
+
+
+def public_file_url(record_id: str, filename: str) -> str:
+    return f"{POCKETBASE_PUBLIC_URL}/api/files/{POCKETBASE_COLLECTION}/{record_id}/{filename}"
 
 
 def fail(error: str, status_code: int = 400, **extra: Any) -> JSONResponse:
@@ -127,6 +136,7 @@ def parse_content(raw: str) -> ParsedMemo:
     location = DEFAULT_LOCATION
     is_hidden = False
     is_delete = False
+    kind = "memo"
     body_lines: list[str] = []
 
     for line in lines:
@@ -150,13 +160,15 @@ def parse_content(raw: str) -> ParsedMemo:
             is_hidden = True
         elif key in {"del", "delete"}:
             is_delete = True
+        elif key == "note":
+            kind = "note"
         else:
             body_lines.append(line)
 
     body = "\n".join(body_lines).strip()
     status = "deleted" if is_delete else "hidden" if is_hidden else "published"
 
-    return ParsedMemo(record_id, category, location, body, status, is_delete, is_hidden)
+    return ParsedMemo(record_id, category, location, body, status, is_delete, is_hidden, kind)
 
 
 def strip_markdown_attachment_images(markdown: str) -> str:
@@ -199,6 +211,39 @@ def order_attachment_paths(markdown_text: str, markdown_parent: PurePosixPath, a
 
     ordered.extend(path for path in attachment_paths if path in remaining)
     return ordered
+
+
+def rewrite_markdown_attachment_images(
+    markdown: str,
+    markdown_parent: PurePosixPath,
+    original_paths: list[str],
+    saved_files: list[str],
+    record_id: str,
+) -> tuple[str, int]:
+    replacements = {
+        path: public_file_url(record_id, saved_file)
+        for path, saved_file in zip(original_paths, saved_files)
+    }
+    rewritten = 0
+
+    def replace(match: re.Match[str]) -> str:
+        nonlocal rewritten
+        ref = match.group(1).strip()
+        wrapped = ref.startswith("<") and ref.endswith(">")
+        clean_ref = ref[1:-1].strip() if wrapped else ref
+        path = archive_ref_path(markdown_parent, unquote(clean_ref))
+        if not path or path not in replacements:
+            return match.group(0)
+
+        rewritten += 1
+        next_ref = replacements[path]
+        if wrapped:
+            next_ref = f"<{next_ref}>"
+        return match.group(0).replace(ref, next_ref, 1)
+
+    text = re.sub(r"!\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)", replace, markdown)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip(), rewritten
 
 
 def clean_zip_name(name: str) -> str:
@@ -268,6 +313,7 @@ def read_archive(archive_bytes: bytes, request_id: str) -> ArchivePayload:
         attachment_paths = order_attachment_paths(markdown_text, markdown_parent, attachment_paths)
 
         media: list[ArchiveMedia] = []
+        media_paths: list[str] = []
         for path in attachment_paths:
             filename = PurePosixPath(path).name
             data = zf.read(safe_entries[path])
@@ -279,8 +325,9 @@ def read_archive(archive_bytes: bytes, request_id: str) -> ArchivePayload:
             if not is_allowed_media(filename, content_type):
                 raise AppError("unsupported_file_type", request_id=request_id, filename=filename, content_type=content_type)
             media.append(ArchiveMedia(filename, data, content_type, len(data), upload_kind(filename, content_type)))
+            media_paths.append(path)
 
-    return ArchivePayload(markdown_name, strip_markdown_attachment_images(markdown_text), media)
+    return ArchivePayload(markdown_name, markdown_parent, markdown_text.strip(), strip_markdown_attachment_images(markdown_text), media, media_paths)
 
 
 async def get_pocketbase_token(client: httpx.AsyncClient) -> str:
@@ -349,6 +396,11 @@ def count_existing_videos(record: dict[str, Any] | None) -> int:
 
 def build_upload_fields(media: list[ArchiveMedia]) -> list[tuple[str, tuple[str, bytes, str]]]:
     return [("media", (item.filename, item.data, item.content_type)) for item in media]
+
+
+def record_kind(record: dict[str, Any] | None) -> str:
+    value = record.get("kind") if record else None
+    return str(value or "memo")
 
 
 def build_multipart_fields(
@@ -441,6 +493,7 @@ async def submit_import(
         "category": str(existing.get("category") or parsed.category) if is_partial_update and existing else parsed.category,
         "location": str(existing.get("location") or parsed.location) if is_partial_update and existing else parsed.location,
         "status": str(existing.get("status") or parsed.status) if is_partial_update and existing and not parsed.is_hidden else parsed.status,
+        "kind": record_kind(existing) if is_partial_update and existing else parsed.kind,
     }
 
     existing_video_count = 0 if has_media else count_existing_videos(existing)
@@ -471,6 +524,41 @@ async def submit_import(
     return response.json()
 
 
+async def rewrite_note_text_after_upload(
+    client: httpx.AsyncClient,
+    token: str,
+    record: dict[str, Any],
+    payload: ArchivePayload,
+    markdown_text: str,
+    request_id: str,
+) -> tuple[dict[str, Any], int]:
+    record_id = str(record.get("id") or "")
+    saved_media = file_names(record.get("media"))
+    if not record_id or not saved_media:
+        return record, 0
+
+    rewritten_text, rewritten_images = rewrite_markdown_attachment_images(
+        markdown_text,
+        payload.markdown_parent,
+        payload.media_paths,
+        saved_media,
+        record_id,
+    )
+    if rewritten_images == 0:
+        return record, 0
+
+    response = await send_pocketbase_write(
+        client,
+        token,
+        "PATCH",
+        f"{POCKETBASE_URL}/api/collections/{POCKETBASE_COLLECTION}/records/{record_id}",
+        {"text": rewritten_text},
+    )
+    if response.status_code >= 400:
+        raise AppError("pocketbase_markdown_rewrite_failed", 502, request_id=request_id, detail=response.text, pocketbase_status=response.status_code)
+    return response.json(), rewritten_images
+
+
 @app.get("/health")
 async def health() -> dict[str, bool]:
     return {"ok": True}
@@ -490,7 +578,8 @@ async def import_memo(
 
     archive_bytes = await archive.read()
     payload = read_archive(archive_bytes, request_id)
-    parsed = parse_content(payload.markdown_text)
+    raw_parsed = parse_content(payload.raw_markdown_text)
+    parsed = raw_parsed if raw_parsed.kind == "note" else parse_content(payload.markdown_text)
 
     if parsed.is_delete and not parsed.record_id:
         log_event("error", request_id, error="missing_id_for_delete")
@@ -525,11 +614,15 @@ async def import_memo(
             return JSONResponse({"ok": True, "request_id": request_id, "action": "deleted", "id": parsed.record_id, "status": "deleted"})
 
         record = await submit_import(client, pb_token, parsed, existing, payload, request_id)
+        rewritten_images = 0
+        if parsed.kind == "note":
+            record, rewritten_images = await rewrite_note_text_after_upload(client, pb_token, record, payload, parsed.text, request_id)
         action = "updated" if existing else "created"
         if parsed.is_hidden:
             action = "hidden" if existing else "created"
 
         saved_media = file_names(record.get("media"))
+        final_text = str(record.get("text") or "")
         received_files = [
             {"filename": item.filename, "content_type": item.content_type, "size": item.size, "kind": item.kind}
             for item in payload.media
@@ -544,7 +637,9 @@ async def import_memo(
             images=media_count_by_kind(payload.media, "image"),
             videos=media_count_by_kind(payload.media, "video"),
             media_saved=len(saved_media),
-            text_length=len(parsed.text),
+            text_length=len(final_text),
+            kind=parsed.kind,
+            rewritten_images=rewritten_images,
         )
         return JSONResponse(
             {
@@ -555,6 +650,11 @@ async def import_memo(
                 "category": record.get("category"),
                 "location": record.get("location"),
                 "status": record.get("status"),
+                "content": {
+                    "kind": record.get("kind") or parsed.kind,
+                    "markdown": parsed.kind == "note",
+                    "rewritten_images": rewritten_images,
+                },
                 "archive": {
                     "markdown_found": True,
                     "attachments": len(payload.media),
@@ -562,8 +662,8 @@ async def import_memo(
                     "videos": media_count_by_kind(payload.media, "video"),
                 },
                 "text": {
-                    "length": len(parsed.text),
-                    "empty": not bool(parsed.text),
+                    "length": len(final_text),
+                    "empty": not bool(final_text),
                 },
                 "media": {
                     "received": len(payload.media),

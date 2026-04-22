@@ -42,7 +42,8 @@ Attachments/
 - `Attachments/` 里只处理图片和视频。
 - 会忽略 `__MACOSX`、隐藏文件和隐藏目录。
 - 禁止 zip 路径穿越。
-- Markdown 正文里的 `![](Attachments/...)` 图片引用会被移除，附件统一写入 `media`。
+- 默认 memo 模式下，Markdown 正文里的 `![](Attachments/...)` 图片引用会被移除，附件统一写入 `media`。
+- `@note` 富格式模式下，Markdown 图片引用会保留，并改写成 PocketBase 可直接访问的文件 URL。
 - 附件优先按 Markdown 图片引用出现顺序上传，未被引用的附件追加在后面。
 
 支持的 Markdown 指令：
@@ -58,6 +59,7 @@ Attachments/
 @hidden
 @del
 @delete
+@note
 ```
 
 同步语义：
@@ -67,6 +69,7 @@ Attachments/
 有 @id：更新。
 @hide：status = hidden。
 @del：status = deleted，必须有 @id。
+@note：kind = note，正文保留 Markdown，并重写附件图片 URL。
 ```
 
 创建新 memo 时，Markdown 必须有正文。更新已有 memo 时，允许只有 `@id` 加附件，用于纯媒体更新。
@@ -81,6 +84,14 @@ Attachments 无文件：不修改原 media。
 不处理 poster。
 ```
 
+内容类型：
+
+```text
+无 @note：kind = memo。
+有 @note：kind = note。
+PocketBase memos 集合需要有 kind 字段，select 单选，选项 memo/note。
+```
+
 运行依赖和环境变量与 `middleware/` 保持一致，共用 `/etc/memos-sync.env`。
 
 建议关键环境变量：
@@ -88,6 +99,7 @@ Attachments 无文件：不修改原 media。
 ```bash
 MEMOS_SYNC_TOKEN=your-ios-token
 POCKETBASE_URL=http://127.0.0.1:8090
+POCKETBASE_PUBLIC_URL=https://a.ithe.cn
 POCKETBASE_COLLECTION=memos
 MEMOS_CATEGORIES=风景,碎语,吐槽,分享
 POCKETBASE_TIMEOUT_SECONDS=300
@@ -156,6 +168,11 @@ curl -X POST https://a.ithe.cn/api/memos/import \
   "request_id": "a1b2c3d4",
   "action": "created",
   "id": "xxx",
+  "content": {
+    "kind": "note",
+    "markdown": true,
+    "rewritten_images": 3
+  },
   "archive": {
     "markdown_found": true,
     "attachments": 3,
