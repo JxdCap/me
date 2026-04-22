@@ -1,0 +1,20 @@
+[Unit]
+Description=Memos Gateway
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/memos-gateway
+EnvironmentFile=/etc/memos-gateway.env
+ExecStart=/opt/memos-gateway/memos-gateway
+Restart=on-failure
+RestartSec=3
+MemoryAccounting=true
+MemoryMax=300M
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

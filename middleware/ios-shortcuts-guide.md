@@ -368,6 +368,10 @@ media   媒体
   "category": "风景",
   "location": "郑州",
   "status": "published",
+  "content": {
+    "kind": "memo",
+    "markdown": false
+  },
   "media_mode": "replace",
   "media": {
     "received": 1,

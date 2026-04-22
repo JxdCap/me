@@ -410,6 +410,7 @@ async def submit_record(
         "category": str(existing.get("category") or parsed.category) if is_media_only_update and existing else parsed.category,
         "location": str(existing.get("location") or parsed.location) if is_media_only_update and existing else parsed.location,
         "status": str(existing.get("status") or parsed.status) if is_media_only_update and existing else parsed.status,
+        "kind": record_kind(existing) if is_media_only_update and existing else "memo",
     }
 
     delete_fields: list[tuple[str, str]] = []
@@ -475,6 +476,11 @@ def count_existing_videos(record: dict[str, Any] | None) -> int:
 
 def count_received_videos(files: list[dict[str, Any]]) -> int:
     return sum(1 for file in files if file.get("kind") == "video")
+
+
+def record_kind(record: dict[str, Any] | None) -> str:
+    value = record.get("kind") if record else None
+    return str(value or "memo")
 
 
 def media_count_after_write(existing: dict[str, Any] | None, received_media_count: int, media_mode: str) -> tuple[int, int]:
@@ -545,7 +551,17 @@ async def sync_memo(
             if response.status_code >= 400:
                 raise AppError("pocketbase_delete_failed", 502, request_id=request_id, detail=response.text, pocketbase_status=response.status_code)
             log_event("success", request_id, action="deleted", id=parsed.record_id, status="deleted")
-            return JSONResponse({"ok": True, "request_id": request_id, "action": "deleted", "id": parsed.record_id, "status": "deleted"})
+            return JSONResponse({
+                "ok": True,
+                "request_id": request_id,
+                "action": "deleted",
+                "id": parsed.record_id,
+                "status": "deleted",
+                "content": {
+                    "kind": "memo",
+                    "markdown": False,
+                },
+            })
 
         submit_result = await submit_record(client, pb_token, parsed, existing, media, poster, media_mode, request_id)
         record = submit_result.record
@@ -563,6 +579,7 @@ async def sync_memo(
             category=record.get("category"),
             location=record.get("location"),
             status=record.get("status"),
+            kind=record.get("kind") or "memo",
             media_mode=media_mode,
             media_received=submit_result.media_received,
             media_saved=len(saved_media),
@@ -578,6 +595,10 @@ async def sync_memo(
                 "category": record.get("category"),
                 "location": record.get("location"),
                 "status": record.get("status"),
+                "content": {
+                    "kind": record.get("kind") or "memo",
+                    "markdown": False,
+                },
                 "media_mode": media_mode,
                 "media": {
                     "received": submit_result.media_received,
